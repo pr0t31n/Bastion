@@ -1,0 +1,86 @@
+# Bastion Audit Rules — Cloudflare Gateway overlay
+# Loaded automatically when vendor == "cloudflare"
+
+- id: FW-210
+  title: "Cloudflare Gateway: No Default Block on Network Policy"
+  description: "No default-deny network policy exists in Cloudflare Gateway. Traffic not matching any explicit rule is passed through."
+  impact: "Traffic not matching any explicit rule is permitted by default, allowing access to unclassified destinations and services."
+  recommendation: "Add a catch-all network policy at the lowest priority that blocks all unmatched traffic."
+  severity: High
+  remediation_effort: immediate
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§3.2"
+      control: "Default Deny Policy"
+      requirement: "All traffic not explicitly permitted shall be denied by default."
+    - id: "NIST SP 800-53"
+      section: "SC-7(5)"
+      control: "Deny by Default / Allow by Exception"
+      requirement: "Implement a default deny policy for all network communications."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: L
+
+- id: FW-211
+  title: "Cloudflare Gateway: DNS Security Policy Not Configured"
+  description: "No DNS security policies are present. Malicious domain blocking, DoH restrictions, and DNS-based threat intelligence are disabled."
+  impact: "Users can resolve malicious domains, access phishing sites, and malware can use any DNS server for C2 communication."
+  recommendation: "Enable Cloudflare Gateway DNS filtering. Add policies to block known malware, phishing, and C2 categories."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SI-3"
+      control: "Malware Protection"
+      requirement: "DNS-based security controls shall be implemented to block malicious domains."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: R
+    S: U
+    C: M
+    I: M
+    A: N
+
+- id: FW-212
+  title: "Cloudflare Gateway: Unrestricted SSH/RDP in Network Policy"
+  description: "A network policy permits SSH or RDP from any source without identity conditions in Cloudflare Gateway."
+  impact: "Any user or device matching the network policy can access SSH/RDP endpoints without additional identity verification, defeating zero-trust principles."
+  recommendation: "Add user/group identity conditions to all SSH/RDP rules. Consider migrating to Cloudflare Access for zero-trust remote access."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 22
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Remote access via Cloudflare Gateway shall require identity verification."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H

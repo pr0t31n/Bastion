@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Bastion &mdash; New Project{% endblock %}
+
+{% block content %}
+<div style="max-width:640px;margin:0 auto">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <a href="{{ url_for('index') }}" class="btn btn-ghost btn-sm">&#8592; Back</a>
+    <h1 style="font-family:var(--font-display);font-size:22px;color:var(--accent-primary)">
+      New Project</h1>
+  </div>
+
+  <div class="card">
+    <form method="POST" action="{{ url_for('api_create_project') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+      <h2 style="margin-bottom:20px">Project Details</h2>
+
+      <div class="form-group">
+        <label for="name">Project Name <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="name" name="name" class="form-control"
+               placeholder="e.g. Acme Corp Firewall Review Q2 2026" required autofocus>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label for="client_name">Client Name</label>
+          <input type="text" id="client_name" name="client_name" class="form-control"
+                 placeholder="Acme Corporation">
+        </div>
+        <div class="form-group">
+          <label for="client_short">Client Short / Slug</label>
+          <input type="text" id="client_short" name="client_short" class="form-control"
+                 placeholder="acme" pattern="[a-zA-Z0-9_\-]+"
+                 title="Letters, numbers, underscores, hyphens only">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label for="consultant_name">Consultant Name</label>
+          <input type="text" id="consultant_name" name="consultant_name" class="form-control"
+                 placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label for="consultant_title">Consultant Title</label>
+          <input type="text" id="consultant_title" name="consultant_title" class="form-control"
+                 placeholder="Senior Security Analyst">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="consultant_email">Consultant Email</label>
+        <input type="email" id="consultant_email" name="consultant_email" class="form-control"
+               placeholder="analyst@example.com">
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="form-group">
+          <label for="start_date">Start Date</label>
+          <input type="date" id="start_date" name="start_date" class="form-control">
+        </div>
+        <div class="form-group">
+          <label for="end_date">End Date</label>
+          <input type="date" id="end_date" name="end_date" class="form-control">
+        </div>
+      </div>
+
+      <div style="padding:16px;background:var(--bg-secondary);border-radius:var(--radius);
+                  border:1px solid var(--border-dim);margin-bottom:20px">
+        <div class="form-check">
+          <input type="checkbox" id="executive_profile" name="executive_profile" value="1">
+          <label for="executive_profile" style="text-transform:none;letter-spacing:0;
+                 font-size:13px;font-weight:600;color:var(--text-primary)">
+            Executive Environment Profile
+          </label>
+        </div>
+        <div class="form-help" style="margin-left:24px">
+          Enable stricter audit thresholds and executive-specific checks (FW-100 series).
+          Use for C-suite offices, board networks, and executive communications environments.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Create Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

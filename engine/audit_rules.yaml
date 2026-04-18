@@ -1,0 +1,1466 @@
+# Bastion Audit Rules — Base ruleset (all vendors)
+# Required fields: id, title, description, impact, recommendation,
+#   severity, remediation_effort, check_type, frameworks, cvss_components
+
+# ============================================================
+# RULE BASE STRUCTURE
+# ============================================================
+- id: FW-001
+  title: "No Default-Deny Rule at End of Policy"
+  description: "No explicit default-deny (implicit permit-all) rule exists at the end of the access control list or policy group. Traffic not matching any rule is permitted rather than dropped."
+  impact: "Unintended traffic flows reach internal systems. Attackers can exploit missing coverage to access systems that policy authors assumed were protected."
+  recommendation: "1. Add an explicit 'deny ip any any log' rule as the final entry in every ACL. 2. Ensure the deny-all rule includes logging to capture all traffic hitting the implicit deny. 3. Review all traffic flows to confirm intended rules precede the default deny. 4. Test the rule using traffic simulation before deploying to production."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§3.2"
+      control: "Default Deny Policy"
+      requirement: "Firewall policy should deny all traffic not explicitly permitted."
+    - id: "NIST SP 800-53"
+      section: "SC-7(5)"
+      control: "Deny by Default / Allow by Exception"
+      requirement: "Implement a default deny policy for network communications."
+    - id: "ISO 27001"
+      section: "A.8.20"
+      control: "Network Security"
+      requirement: "Networks shall be managed and controlled to protect information."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-002
+  title: "Any-Any-Any Permit Rule Detected"
+  description: "A firewall rule permits all traffic from any source to any destination on all ports and protocols. This is the most dangerous firewall misconfiguration possible."
+  impact: "The firewall provides no access control. All traffic is permitted regardless of source, destination, or protocol."
+  recommendation: "1. Immediately remove or disable the any-any permit rule. 2. Implement principle of least privilege — only permit required traffic flows. 3. Document all required flows before rebuilding the policy. 4. Use a test environment to validate replacement rules before deploying."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+      - field: dst_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+      - field: dst_ports
+        operator: is_null
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§3.2"
+      control: "Default Deny Policy"
+      requirement: "Firewall policy should deny all traffic not explicitly permitted."
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Monitor and control communications at external and internal boundaries."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "Networks shall be segregated based on information security requirements."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: H
+
+- id: FW-004
+  title: "Disabled Rules Present in Production Configuration"
+  description: "One or more firewall rules are disabled (inactive) in the production configuration. Disabled rules accumulate over time and indicate configuration drift or incomplete cleanup."
+  impact: "Disabled rules represent policy intent that is no longer enforced. They create confusion during audits, may be re-enabled accidentally, and indicate the policy requires cleanup."
+  recommendation: "1. Review all disabled rules and determine if they are still required. 2. Remove disabled rules that are no longer needed. 3. Document the reason for any disabled rules that must be retained. 4. Establish a policy lifecycle process to prevent accumulation of disabled rules."
+  severity: Low
+  remediation_effort: long_term
+  check_type: rule_criteria
+  criteria:
+    field: enabled
+    operator: equals
+    value: false
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§4.1"
+      control: "Firewall Policy Management"
+      requirement: "Firewall rules should be reviewed and maintained regularly."
+    - id: "ISO 27001"
+      section: "A.8.9"
+      control: "Configuration Management"
+      requirement: "Configurations shall be managed and documented."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: L
+    UI: R
+    S: U
+    C: L
+    I: L
+    A: N
+
+- id: FW-005
+  title: "Duplicate Firewall Rules Detected"
+  description: "Two or more firewall rules have identical source, destination, port, and action specifications. Duplicate rules indicate policy bloat and maintenance issues."
+  impact: "Duplicate rules increase management overhead, create confusion during incident response, and may indicate the policy review process is not working correctly."
+  recommendation: "1. Identify and remove all duplicate rules. 2. Implement a rule review process that checks for duplicates before policy deployment. 3. Use firewall management tools that flag duplicate rules automatically."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§4.1"
+      control: "Firewall Policy Management"
+      requirement: "Firewall rules should be reviewed and maintained regularly."
+    - id: "ISO 27001"
+      section: "A.8.9"
+      control: "Configuration Management"
+      requirement: "Configurations shall be managed and documented."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: L
+    UI: R
+    S: U
+    C: N
+    I: L
+    A: N
+
+- id: FW-006
+  title: "Shadowed Rules — Unreachable Policy Entries"
+  description: "One or more firewall rules are completely covered (shadowed) by earlier, broader rules and will never be evaluated. Shadowed rules indicate policy maintenance issues and potential security gaps."
+  impact: "Shadowed rules are never executed. If the shadowing rule has a different action than the shadowed rule, traffic may be handled contrary to policy intent."
+  recommendation: "1. Reorder rules so more specific rules precede broader rules. 2. Remove rules that are completely redundant given preceding rules. 3. Implement rule ordering verification in change management process."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§4.1"
+      control: "Firewall Policy Management"
+      requirement: "Firewall rules should be ordered for correct evaluation."
+    - id: "ISO 27001"
+      section: "A.8.9"
+      control: "Configuration Management"
+      requirement: "Configurations shall be managed and documented."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: L
+    UI: R
+    S: U
+    C: L
+    I: L
+    A: N
+
+- id: FW-007
+  title: "Suboptimal Rule Ordering"
+  description: "Frequently-hit rules appear after less-used rules in the policy list. This degrades performance as the firewall must evaluate all preceding rules before reaching the effective rule."
+  impact: "Increased latency for matching traffic. In high-volume environments, suboptimal ordering can degrade firewall throughput."
+  recommendation: "1. Place high-volume deny rules (e.g., blocklists) near the top of the policy. 2. Place more specific, lower-volume rules before broad rules. 3. Use hit count data to determine optimal ordering."
+  severity: Low
+  remediation_effort: long_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§4.1"
+      control: "Firewall Policy Management"
+      requirement: "Firewall rules should be ordered for efficiency and correctness."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: L
+    UI: N
+    S: U
+    C: N
+    I: N
+    A: L
+
+# ============================================================
+# DANGEROUS PORT EXPOSURE
+# ============================================================
+- id: FW-010
+  title: "RDP Permitted from Any Source"
+  description: "A firewall rule permits Remote Desktop Protocol (RDP, TCP 3389) inbound from any source address. RDP is one of the most commonly exploited services for ransomware and lateral movement."
+  impact: "Exposed RDP is a primary attack vector for ransomware gangs, APT groups, and commodity attackers. Authentication bypass vulnerabilities (BlueKeep, DejaBlue) regularly affect RDP."
+  recommendation: "1. Immediately restrict RDP access to specific management IP ranges. 2. Place RDP behind a VPN or RDP Gateway. 3. Enable Network Level Authentication (NLA). 4. Implement account lockout policies. 5. Consider replacing RDP with a zero-trust remote access solution."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 3389
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Restrict access to only authorized remote access methods."
+    - id: "NIST 800-41"
+      section: "§3.3"
+      control: "Inbound Access Control"
+      requirement: "Remote access services must be restricted to authorized sources."
+    - id: "ISO 27001"
+      section: "A.8.20"
+      control: "Network Security"
+      requirement: "Remote access should be protected with appropriate controls."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-011
+  title: "SSH Permitted from External/Untrusted Sources"
+  description: "A firewall rule permits SSH (TCP 22) from untrusted or external sources. SSH brute-force attacks are extremely common against internet-exposed SSH."
+  impact: "Exposed SSH enables brute-force attacks, credential stuffing, and exploitation of SSH vulnerabilities. Compromised SSH access provides immediate shell access to the target system."
+  recommendation: "1. Restrict SSH to management IP addresses only. 2. Implement SSH key-based authentication and disable password authentication. 3. Change SSH to a non-standard port (security by obscurity, not a primary control). 4. Implement fail2ban or equivalent brute-force protection. 5. Consider placing SSH behind a jump host or bastion server."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 22
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Restrict remote administration access to authorized management stations."
+    - id: "NIST 800-41"
+      section: "§3.3"
+      control: "Inbound Access Control"
+      requirement: "SSH should be restricted to authorized management sources."
+    - id: "ISO 27001"
+      section: "A.8.20"
+      control: "Network Security"
+      requirement: "Remote administration shall be controlled and monitored."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: L
+
+- id: FW-012
+  title: "Telnet Permitted Through Firewall"
+  description: "A firewall rule permits Telnet (TCP 23). Telnet transmits all data including credentials in plaintext and has been deprecated for over 25 years."
+  impact: "All Telnet communications, including authentication credentials, are transmitted in cleartext and can be intercepted by network eavesdroppers. No confidentiality or integrity protection exists."
+  recommendation: "1. Immediately block all Telnet traffic. 2. Replace all Telnet-dependent systems with SSH. 3. If Telnet is required for legacy systems, isolate those systems and implement compensating controls. 4. Review device configurations to ensure SSH is enabled on all network equipment."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 23
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-8"
+      control: "Transmission Confidentiality and Integrity"
+      requirement: "Implement cryptographic mechanisms to prevent unauthorized disclosure during transmission."
+    - id: "NIST 800-41"
+      section: "§3.3"
+      control: "Cleartext Protocol Restriction"
+      requirement: "Cleartext management protocols shall not traverse the firewall."
+    - id: "ISO 27001"
+      section: "A.8.24"
+      control: "Use of Cryptography"
+      requirement: "Cryptographic controls shall be used for information transmitted over networks."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: M
+    A: N
+
+- id: FW-013
+  title: "FTP Permitted Through Firewall"
+  description: "A firewall rule permits FTP (TCP 20/21). FTP transmits credentials and data in plaintext and supports anonymous authentication by default on many implementations."
+  impact: "FTP credentials and file contents are transmitted in cleartext. Anonymous FTP can expose sensitive files. FTP's PORT command can be abused for firewall bypass (FTP bounce attacks)."
+  recommendation: "1. Replace FTP with SFTP (SSH File Transfer Protocol) or FTPS (FTP over TLS). 2. If FTP must be used, restrict to internal networks only. 3. Disable anonymous FTP. 4. Implement strict file transfer policies."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 21
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-8"
+      control: "Transmission Confidentiality and Integrity"
+      requirement: "Use cryptographic mechanisms to protect file transfers."
+    - id: "ISO 27001"
+      section: "A.8.24"
+      control: "Use of Cryptography"
+      requirement: "Encrypt data in transit using appropriate mechanisms."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
+
+- id: FW-014
+  title: "SMB Permitted from External Sources (TCP 445)"
+  description: "A firewall rule permits SMB (TCP 445) from external/untrusted sources. SMB is the primary protocol used by ransomware (WannaCry, NotPetya, EternalBlue) for lateral movement."
+  impact: "Exposed SMB is the most common ransomware infection vector. EternalBlue and related exploits are still widely used in ransomware campaigns. SMB exposure directly enables catastrophic data encryption attacks."
+  recommendation: "1. Immediately block TCP 445 from all untrusted sources. 2. Block UDP 137-138 and TCP 139 (NetBIOS) as well. 3. Audit internal SMB to ensure it is restricted to required segments. 4. Implement host-based firewall rules in addition to network firewall. 5. Keep Windows systems patched against EternalBlue."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 445
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Block all SMB traffic at the network perimeter."
+    - id: "NIST 800-41"
+      section: "§3.3"
+      control: "Inbound Access Control"
+      requirement: "File sharing protocols shall not be permitted from external sources."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "SMB shall be restricted to internal segments only."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: H
+
+- id: FW-015
+  title: "MS-RPC Permitted from External Sources (TCP 135)"
+  description: "A firewall rule permits Microsoft RPC (TCP 135) from external sources. MS-RPC is a critical Windows service used for DCOM, WMI, and many Windows management interfaces."
+  impact: "Exposed MS-RPC enables remote exploitation of Windows services via DCOM and WMI. Historically abused by Blaster, Sasser, and modern APT groups for remote code execution."
+  recommendation: "1. Block TCP 135 from all external sources. 2. Block the entire RPC dynamic port range (TCP 49152-65535) from external sources. 3. Consider blocking RPC internally except between required systems."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 135
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Block Windows RPC services from external access."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: H
+
+- id: FW-016
+  title: "NetBIOS Permitted Through Firewall"
+  description: "A firewall rule permits NetBIOS (UDP 137-138, TCP 139) traffic. NetBIOS is a legacy Windows protocol that enables reconnaissance, credential theft (LLMNR/NBT-NS poisoning), and lateral movement."
+  impact: "NetBIOS enables LLMNR and NBT-NS poisoning attacks, NetBIOS name query reconnaissance, and credential capture via Responder-style attacks. Should never traverse firewall boundaries."
+  recommendation: "1. Block UDP 137, 138 and TCP 139 at all firewall boundaries. 2. Disable NetBIOS over TCP/IP on Windows hosts where not required. 3. Disable LLMNR and NBT-NS via Group Policy."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 139
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Block legacy Windows network protocols from crossing zone boundaries."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: M
+    A: N
+
+- id: FW-017
+  title: "SNMP Permitted from Any Source"
+  description: "A firewall rule permits SNMP (UDP 161) from any source address. SNMP exposes device configurations, routing tables, and interface statistics to anyone who can reach the port."
+  impact: "SNMP v1/v2c use community strings for authentication (effectively cleartext passwords). An attacker with SNMP access can read full device configurations, enumerate network topology, and potentially write configurations if community string permits."
+  recommendation: "1. Restrict SNMP to dedicated monitoring IP addresses only. 2. Upgrade to SNMPv3 with authentication and encryption. 3. Use ACLs on network devices themselves, not just the firewall. 4. Change default community strings (public/private)."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 161
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Restrict SNMP access to authorized management systems."
+    - id: "ISO 27001"
+      section: "A.8.20"
+      control: "Network Security"
+      requirement: "Network management protocols shall be restricted to authorized management stations."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: M
+    A: N
+
+- id: FW-018
+  title: "SNMP v1/v2c Weak Authentication Exposure"
+  description: "SNMP is permitted through the firewall with likely v1/v2c community string authentication. SNMPv1 and v2c use cleartext community strings that can be sniffed."
+  impact: "Community strings transmitted in cleartext can be captured and used for unauthorized device access. Many devices ship with default community strings (public/private)."
+  recommendation: "1. Migrate to SNMPv3 with AuthPriv security level. 2. If SNMP v1/v2c must be used, restrict to isolated management VLAN. 3. Change all community strings from defaults. 4. Implement SNMPv3 privacy (encryption) for sensitive data."
+  severity: High
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 161
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-8"
+      control: "Transmission Confidentiality and Integrity"
+      requirement: "Use encrypted management protocols for network device management."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: L
+    A: N
+
+- id: FW-019
+  title: "WinRM Permitted from External Sources (TCP 5985/5986)"
+  description: "A firewall rule permits Windows Remote Management (WinRM, TCP 5985 HTTP or 5986 HTTPS) from external sources. WinRM provides PowerShell remoting and remote command execution."
+  impact: "Exposed WinRM enables remote command execution via PowerShell. Commonly used by attackers for lateral movement and persistence once credentials are compromised."
+  recommendation: "1. Block TCP 5985 and 5986 from all untrusted sources. 2. Restrict WinRM to management IP ranges only. 3. Require HTTPS (5986) over HTTP (5985). 4. Implement WinRM access control lists."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 5985
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Remote management protocols shall be restricted to authorized sources."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-020
+  title: "Database Ports Exposed to External Sources"
+  description: "A firewall rule permits database service ports (MySQL TCP 3306, MSSQL TCP 1433, PostgreSQL TCP 5432, Oracle TCP 1521) from external or untrusted sources."
+  impact: "Direct database exposure enables SQL injection amplification, credential brute-force against database authentication, and direct data exfiltration. Databases should never be directly internet-accessible."
+  recommendation: "1. Immediately block all database ports from untrusted sources. 2. Place databases in a dedicated database VLAN accessible only from application servers. 3. Implement database activity monitoring (DAM). 4. Use application-layer database proxies where possible."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 1433
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Database services shall not be directly accessible from untrusted networks."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "Database servers shall be isolated in a dedicated network segment."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-021
+  title: "Elasticsearch Exposed to External Sources (TCP 9200/9300)"
+  description: "A firewall rule permits Elasticsearch (TCP 9200 HTTP API or 9300 transport) from external or untrusted sources. Elasticsearch has no authentication by default."
+  impact: "Unauthenticated Elasticsearch instances have led to some of the largest data breaches in history. All indexed data is accessible to anyone who can reach port 9200."
+  recommendation: "1. Immediately block TCP 9200 and 9300 from all untrusted sources. 2. Enable Elasticsearch security features (X-Pack/Security). 3. Implement TLS and authentication. 4. Place Elasticsearch behind a reverse proxy with authentication."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 9200
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Search and analytics databases shall not be publicly accessible."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-022
+  title: "Redis/Memcached Exposed to External Sources"
+  description: "A firewall rule permits Redis (TCP 6379) or Memcached (TCP/UDP 11211) from external sources. Both services have no authentication by default."
+  impact: "Unauthenticated Redis allows full data access and remote code execution via EVAL command. Memcached exposure enables data theft and the service has been abused for massive DDoS amplification attacks."
+  recommendation: "1. Immediately block TCP 6379 and 11211 from untrusted sources. 2. Enable Redis AUTH and bind to localhost or internal addresses only. 3. Disable Memcached UDP to prevent amplification abuse. 4. Place caching services behind application tier — never expose externally."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 6379
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "In-memory data stores shall not be exposed to untrusted networks."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-023
+  title: "TFTP Permitted Through Firewall"
+  description: "A firewall rule permits TFTP (UDP 69). TFTP has no authentication mechanism — any client that can reach the TFTP server can read and write files."
+  impact: "TFTP enables unauthenticated file reads and writes. Attackers who can reach TFTP servers can read configuration files, firmware, and write malicious files."
+  recommendation: "1. Block UDP 69 at all firewall boundaries. 2. Restrict TFTP to isolated management VLAN if required for network device management. 3. Use SCP or SFTP instead of TFTP for device provisioning."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 69
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Unauthenticated file transfer protocols shall be blocked."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: H
+    A: N
+
+- id: FW-024
+  title: "NTP Access Not Restricted to Trusted Sources"
+  description: "A firewall rule permits NTP (UDP 123) from any source without restriction. Open NTP servers can be abused for reflection/amplification DDoS attacks."
+  impact: "Unrestricted NTP access enables use of the firewall's internal NTP infrastructure as a DDoS amplification source. NTP amplification attacks achieve amplification factors of up to 556x."
+  recommendation: "1. Restrict NTP to specific trusted time sources (external) and internal clients only. 2. Disable NTP monlist and other amplification-capable commands. 3. Rate-limit NTP responses."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 123
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Time synchronization services shall be restricted to authorized sources."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: N
+    I: N
+    A: H
+
+- id: FW-025
+  title: "DNS Outbound Not Restricted to Authorised Resolvers"
+  description: "Outbound DNS (UDP/TCP 53) is permitted from any internal host to any external destination, allowing direct DNS resolution to arbitrary external servers."
+  impact: "Unrestricted outbound DNS enables DNS tunneling for data exfiltration, circumvents DNS-based security controls (sinkholes, RPZ), and allows malware to use any DNS server for C2 communication."
+  recommendation: "1. Restrict outbound DNS to authorised internal resolvers only. 2. Block direct outbound DNS from all hosts except designated resolvers. 3. Implement DNS logging and monitoring. 4. Deploy DNS filtering (RPZ, DNS firewall) on authorised resolvers."
+  severity: Low
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 53
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "DNS resolution shall be directed through controlled resolvers."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: L
+    I: L
+    A: N
+
+- id: FW-026
+  title: "ICMP Not Restricted"
+  description: "ICMP is permitted without source or destination restriction. While necessary for network diagnostics, unrestricted ICMP enables network reconnaissance and covert channel communication."
+  impact: "ICMP ping sweeps reveal network topology. ICMP tunneling (iodine, icmptunnel) enables covert data exfiltration. ICMP redirect messages can be used for man-in-the-middle attacks."
+  recommendation: "1. Restrict inbound ICMP to only needed types (echo-reply, unreachable, time-exceeded). 2. Block ICMP echo from external sources or restrict to monitoring IPs. 3. Consider rate-limiting ICMP."
+  severity: Informational
+  remediation_effort: long_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: protocol
+        operator: equals
+        value: "icmp"
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "ICMP traffic shall be filtered to prevent misuse."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: N
+    UI: N
+    S: U
+    C: L
+    I: N
+    A: N
+
+# ============================================================
+# MANAGEMENT SECURITY
+# ============================================================
+- id: FW-030
+  title: "Management Access Not Restricted to Management Zone"
+  description: "Firewall management interfaces (HTTPS, SSH, ASDM) are accessible from any source address, including untrusted networks."
+  impact: "Unrestricted management access exposes the firewall administrative interface to brute-force attacks, credential stuffing, and exploitation of management interface vulnerabilities."
+  recommendation: "1. Restrict all management access to a dedicated out-of-band management network. 2. Block all management protocol access from non-management networks. 3. Implement management VLAN with strict access controls. 4. Enable failed login lockout on management interfaces."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: management_access
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Management interfaces shall be accessible only from authorized management networks."
+    - id: "NIST 800-41"
+      section: "§3.5"
+      control: "Firewall Management"
+      requirement: "Firewall management access shall be restricted to authorized personnel and systems."
+    - id: "ISO 27001"
+      section: "A.8.31"
+      control: "Separation of Development, Test and Production Environments"
+      requirement: "Management access shall be separated from production traffic."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-031
+  title: "HTTP Used for Device Management"
+  description: "HTTP (cleartext) is enabled for firewall or device management. All management traffic including credentials is transmitted unencrypted."
+  impact: "Credentials, session tokens, and configuration changes transmitted via HTTP can be captured by network eavesdroppers. Session hijacking attacks are trivial against HTTP management sessions."
+  recommendation: "1. Disable HTTP management on all devices. 2. Enable HTTPS with TLS 1.2 minimum. 3. Install a valid management certificate. 4. Redirect any HTTP management connections to HTTPS."
+  severity: High
+  remediation_effort: immediate
+  check_type: management_access
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-8"
+      control: "Transmission Confidentiality and Integrity"
+      requirement: "Management sessions shall be encrypted."
+    - id: "ISO 27001"
+      section: "A.8.24"
+      control: "Use of Cryptography"
+      requirement: "Management communications shall be protected by appropriate encryption."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: M
+    A: N
+
+- id: FW-032
+  title: "Telnet Used for Device Management"
+  description: "Telnet is enabled as a device management protocol. Telnet provides no encryption, authentication challenge-response visibility, or integrity protection."
+  impact: "All management commands, including configuration changes and credentials, are transmitted in cleartext. An attacker with network access can capture and replay management sessions."
+  recommendation: "1. Immediately disable Telnet on all devices. 2. Enable SSH version 2 as the sole remote management protocol. 3. Configure SSH with strong cipher suites and MAC algorithms. 4. Remove Telnet from all device configurations."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: management_access
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-8"
+      control: "Transmission Confidentiality and Integrity"
+      requirement: "All management protocols shall provide confidentiality and integrity."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-033
+  title: "No Source Restriction on SSH/HTTPS Management Access"
+  description: "SSH or HTTPS management access is configured without a source IP restriction, allowing management access from any network."
+  impact: "Management access from any source dramatically increases the attack surface for brute-force attacks, credential stuffing, and exploitation of management interface vulnerabilities."
+  recommendation: "1. Implement source IP restrictions for all management protocols. 2. Create an explicit management ACL restricting access to management workstation IPs. 3. Use an out-of-band management network where possible."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: management_access
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Management access shall be restricted to authorized source addresses."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: H
+
+- id: FW-034
+  title: "HTTPS Management Accessible from Any Source"
+  description: "HTTPS device management is accessible from any source IP address. While HTTPS provides encryption, unrestricted access enables credential attacks."
+  impact: "Unrestricted HTTPS management enables brute-force and credential stuffing attacks against the management interface. Web-based management interfaces have historically contained exploitable vulnerabilities."
+  recommendation: "1. Restrict HTTPS management to specific management IP ranges. 2. Implement account lockout after failed login attempts. 3. Enable multi-factor authentication for management access where supported."
+  severity: High
+  remediation_effort: short_term
+  check_type: management_access
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Management interfaces shall be restricted to authorized management networks."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: M
+    A: N
+
+# ============================================================
+# LOGGING
+# ============================================================
+- id: FW-040
+  title: "Permit Rules Without Logging Enabled"
+  description: "One or more permit (allow) rules do not have logging enabled. Traffic matching these rules is not captured in firewall logs."
+  impact: "Without logging on permit rules, allowed traffic is invisible to security monitoring. Attacks, data exfiltration, and lateral movement that uses permitted paths cannot be detected or investigated."
+  recommendation: "1. Enable logging on all permit rules. 2. At minimum, enable logging on high-risk rules (any-source, external-to-internal). 3. Forward logs to a centralised SIEM for correlation. 4. Set log level to 'informational' for permit rules to capture connection details."
+  severity: High
+  remediation_effort: short_term
+  check_type: logging
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: logging
+        operator: equals
+        value: false
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "AU-2"
+      control: "Event Logging"
+      requirement: "Identify the types of events to be logged."
+    - id: "NIST SP 800-53"
+      section: "AU-12"
+      control: "Audit Record Generation"
+      requirement: "Provide audit record generation capability for permitted traffic."
+    - id: "ISO 27001"
+      section: "A.8.15"
+      control: "Logging"
+      requirement: "All significant network events shall be logged."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: N
+    A: N
+
+- id: FW-041
+  title: "Deny Rules Without Logging Enabled"
+  description: "One or more deny rules do not have logging enabled. Blocked connection attempts are not captured in firewall logs."
+  impact: "Without logging on deny rules, attack attempts against blocked services are invisible. Security teams cannot detect port scans, reconnaissance, or blocked attack attempts."
+  recommendation: "1. Enable logging on all deny rules, particularly the default-deny rule. 2. Use logging levels that capture the necessary detail (source IP, destination, port, protocol). 3. Implement log aggregation and alerting for suspicious deny patterns."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: logging
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "deny"
+      - field: logging
+        operator: equals
+        value: false
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "AU-2"
+      control: "Event Logging"
+      requirement: "Log all denied connection attempts."
+    - id: "ISO 27001"
+      section: "A.8.15"
+      control: "Logging"
+      requirement: "Failed access attempts shall be logged."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: N
+    A: N
+
+- id: FW-042
+  title: "No Logging Configured — Complete Forensic Blind Spot"
+  description: "No firewall rules in this configuration have logging enabled. The firewall is operating without any security event logging, creating a complete forensic blind spot."
+  impact: "Without any logging, the organisation cannot detect attacks, investigate incidents, demonstrate compliance, or understand traffic patterns. This is a fundamental security control failure."
+  recommendation: "1. Immediately enable logging on all permit rules. 2. Enable logging on the default-deny rule. 3. Configure syslog forwarding to a SIEM. 4. Define a log retention policy (minimum 90 days online, 1 year archived). 5. Establish a log review process."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: logging
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "AU-2"
+      control: "Event Logging"
+      requirement: "Log significant network security events."
+    - id: "NIST SP 800-53"
+      section: "AU-12"
+      control: "Audit Record Generation"
+      requirement: "Firewall shall generate audit records for defined events."
+    - id: "ISO 27001"
+      section: "A.8.15"
+      control: "Logging"
+      requirement: "Network security events shall be logged and monitored."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: N
+    A: N
+
+# ============================================================
+# SEGMENTATION
+# ============================================================
+- id: FW-050
+  title: "No DMZ (Demilitarised Zone) Detected"
+  description: "No DMZ zone or interface has been identified in the firewall configuration. Public-facing services appear to be placed in the same zone as internal systems."
+  impact: "Without a DMZ, compromising a public-facing server (web, email, DNS) provides direct access to internal systems. This eliminates a critical layer of defence-in-depth."
+  recommendation: "1. Create a dedicated DMZ zone for all public-facing servers. 2. Configure the DMZ with an intermediate security level. 3. Implement strict policies between DMZ and internal zones. 4. Ensure DMZ servers cannot initiate connections to internal systems."
+  severity: High
+  remediation_effort: long_term
+  check_type: segmentation
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§3.4"
+      control: "DMZ Architecture"
+      requirement: "Public-facing servers shall be isolated in a DMZ segment."
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Implement a DMZ to protect internal resources from external threats."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "Public-facing services shall be segregated from internal systems."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: L
+
+- id: FW-051
+  title: "Direct Internet-to-Internal Permit Without DMZ Intermediate"
+  description: "Permit rules exist that allow direct traffic from the external/internet zone to internal high-trust zones without passing through a DMZ or intermediate inspection zone."
+  impact: "Traffic from the internet reaches internal systems directly. A single exploitation event on an internet-facing system could lead to direct internal network compromise."
+  recommendation: "1. Redesign traffic flows to route internet traffic through a DMZ. 2. Place all public-facing services in the DMZ. 3. Implement application-layer inspection between DMZ and internal zones. 4. Require explicit permit rules for DMZ-to-internal traffic."
+  severity: High
+  remediation_effort: long_term
+  check_type: segmentation
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§3.4"
+      control: "DMZ Architecture"
+      requirement: "All external traffic shall traverse a DMZ before reaching internal networks."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "Internal networks shall be protected from direct external access."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: L
+
+- id: FW-052
+  title: "Flat Network — Only One Zone or Interface Defined"
+  description: "The firewall configuration defines only a single zone or network interface. All traffic flows through a single segment with no internal segmentation."
+  impact: "A flat network means a single compromised host can communicate with any other host. Lateral movement is trivial and ransomware can spread unimpeded."
+  recommendation: "1. Segment the network into functional zones (internal, DMZ, management, guest). 2. Implement firewall policies between each zone pair. 3. Consider microsegmentation for high-value systems. 4. Progressively add zones as part of a phased network redesign."
+  severity: High
+  remediation_effort: long_term
+  check_type: segmentation
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Implement network segmentation to limit lateral movement."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "Networks shall be segregated based on information classification and risk."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: L
+
+- id: FW-053
+  title: "Server-to-Workstation Traffic Unrestricted"
+  description: "No rules restrict east-west traffic between server and workstation segments. Servers can initiate connections to workstations and vice versa without inspection."
+  impact: "Unrestricted server-to-workstation traffic enables ransomware propagation, lateral movement from compromised servers to workstations, and from workstations to servers."
+  recommendation: "1. Implement east-west segmentation between server and workstation VLANs. 2. Deny all server-initiated connections to workstation networks. 3. Permit only required application ports from workstations to servers. 4. Implement network monitoring to detect anomalous east-west traffic."
+  severity: Medium
+  remediation_effort: long_term
+  check_type: segmentation
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Implement controls to limit lateral movement within the network."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: L
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: L
+
+# ============================================================
+# NAT
+# ============================================================
+- id: FW-060
+  title: "Internal RFC-1918 Addresses Potentially Reachable Without NAT"
+  description: "Permit rules allow traffic to private (RFC-1918) destination addresses from external zones without corresponding NAT translations, potentially exposing internal addressing."
+  impact: "If RFC-1918 addresses are routed externally without NAT, internal network topology is exposed. This can enable direct attacks against internal systems or reveal sensitive network design information."
+  recommendation: "1. Verify that NAT is configured for all rules permitting external traffic to internal RFC-1918 destinations. 2. Ensure that external routing does not leak RFC-1918 prefixes. 3. Implement NAT for all internal-to-external traffic flows."
+  severity: High
+  remediation_effort: short_term
+  check_type: nat
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Internal network addressing shall not be exposed to untrusted networks."
+    - id: "NIST 800-41"
+      section: "§3.3"
+      control: "NAT Policy"
+      requirement: "RFC-1918 addresses shall be translated at zone boundaries."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
+
+- id: FW-061
+  title: "1:1 Static NAT Exposes Internal Host Directly to Internet"
+  description: "A 1:1 static NAT mapping exposes an internal host directly to the internet with full port translation. All ports on the internal host are potentially reachable."
+  impact: "Static NAT 1:1 mappings expose the complete attack surface of the mapped internal host. Any vulnerability on that host is directly exploitable from the internet."
+  recommendation: "1. Replace 1:1 static NAT with port-specific NAT where possible. 2. Implement access control lists in combination with static NAT. 3. Only expose specific required ports, not the full host. 4. Move services requiring internet exposure to a DMZ with strict policies."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: nat
+  frameworks:
+    - id: "NIST 800-41"
+      section: "§3.3"
+      control: "NAT Policy"
+      requirement: "NAT configurations shall minimise exposed attack surface."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
+
+# ============================================================
+# PROTOCOL SPECIFIC
+# ============================================================
+- id: FW-070
+  title: "IPv6 Traffic Not Addressed in Policy"
+  description: "The firewall configuration does not include explicit IPv6 policy rules. If IPv6 is enabled on interfaces, traffic may be uncontrolled."
+  impact: "Unmanaged IPv6 traffic may bypass IPv4 security controls. Dual-stack hosts may be reachable via IPv6 paths that are not covered by the IPv4 firewall policy."
+  recommendation: "1. Audit all interfaces for IPv6 enablement. 2. If IPv6 is not required, disable it on all interfaces. 3. If IPv6 is used, implement a full dual-stack firewall policy mirroring IPv4 controls. 4. Block IPv6 tunnelling protocols (6to4, Teredo, ISATAP) at the perimeter."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "IPv6 traffic shall be subject to the same access controls as IPv4."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
+
+- id: FW-071
+  title: "GRE/IPSec Tunnels Permitted Without Authentication Requirement"
+  description: "GRE (protocol 47) or IPSec (ESP/AH, protocols 50/51) tunnelling is permitted without authentication requirements enforced at the firewall level."
+  impact: "Unauthenticated GRE tunnels can be used to encapsulate and hide malicious traffic, bypassing application-layer inspection. GRE provides no confidentiality or integrity."
+  recommendation: "1. Replace GRE with authenticated IPSec tunnels. 2. Implement IKEv2 with strong authentication for all VPN tunnels. 3. If GRE is required, encapsulate in IPSec. 4. Implement strict source/destination restrictions on tunnel endpoints."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: protocol
+        operator: equals
+        value: "gre"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-8"
+      control: "Transmission Confidentiality and Integrity"
+      requirement: "Tunnel endpoints shall be authenticated and traffic encrypted."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
+
+- id: FW-072
+  title: "BGP/OSPF Routing Protocols Permitted from External Sources"
+  description: "BGP (TCP 179) or OSPF routing protocol traffic is permitted from external or untrusted sources. Routing protocol injection can manipulate network traffic paths."
+  impact: "Rogue BGP sessions or OSPF updates can redirect traffic to attacker-controlled destinations, enable man-in-the-middle attacks, or cause network-wide outages."
+  recommendation: "1. Block BGP (TCP 179) from untrusted sources. 2. Implement BGP authentication (MD5 or TCP-AO). 3. Implement OSPF authentication. 4. Restrict routing protocol traffic to dedicated peering addresses."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 179
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Routing protocols shall be restricted to authorised peers."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: L
+    I: H
+    A: H
+
+- id: FW-073
+  title: "Outbound SMTP Not Restricted to Mail Relay"
+  description: "Outbound SMTP (TCP 25) is permitted from internal networks to any external destination, allowing any internal host to send email directly to external mail servers."
+  impact: "Unrestricted outbound SMTP enables malware to send spam, phishing emails, and data exfiltration via email from any compromised internal host. This also contributes to IP reputation damage."
+  recommendation: "1. Block outbound TCP 25 from all hosts except designated mail relays. 2. Route all outbound SMTP through a controlled mail relay/gateway. 3. Implement outbound email filtering and DMARC/SPF/DKIM. 4. Monitor for anomalous outbound email volumes."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 25
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Outbound email shall be routed through controlled gateways."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
+
+- id: FW-074
+  title: "TLS/SSL Bypass or Inspection Not Configured"
+  description: "Encrypted traffic (HTTPS/TLS) is permitted through the firewall without any indication of SSL/TLS inspection being configured. Malware and data exfiltration commonly use HTTPS to evade detection."
+  impact: "Encrypted traffic bypasses all application-layer inspection. Malware C2 communications, data exfiltration, and phishing content cannot be inspected or blocked."
+  recommendation: "1. Implement SSL/TLS inspection where technically and legally feasible. 2. At minimum, block HTTPS to known malicious categories via DNS. 3. Implement certificate pinning bypass detection. 4. Consider decryption zones for high-risk traffic categories."
+  severity: Medium
+  remediation_effort: long_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Encrypted traffic shall be inspected to the extent feasible."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: N
+    A: N
+
+# ============================================================
+# EXECUTIVE ENVIRONMENT (also exposed in base for completeness)
+# ============================================================
+- id: FW-080
+  title: "VoIP SIP Permitted Without Restriction"
+  description: "SIP (Session Initiation Protocol, UDP/TCP 5060/5061) is permitted from untrusted sources without source restriction. SIP is commonly targeted for toll fraud and eavesdropping."
+  impact: "Exposed SIP enables toll fraud (attackers route expensive calls through your infrastructure), eavesdropping on VoIP calls, and SIP scanning for credential harvesting."
+  recommendation: "1. Restrict SIP to SIP trunk provider IP ranges only. 2. Implement SIP-aware firewall inspection. 3. Deploy a Session Border Controller (SBC). 4. Enable SIP authentication and registration rate limiting."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 5060
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "VoIP services shall be protected from unauthorised access."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: L
+
+- id: FW-081
+  title: "Video Conferencing Ports Unrestricted"
+  description: "Video conferencing service ports (Zoom 8801-8802, Teams 3478-3481, Webex) are permitted from any source without restriction."
+  impact: "Unrestricted video conferencing ports can be abused for reconnaissance and may expose internal network information through STUN/TURN protocol interactions."
+  recommendation: "1. Restrict video conferencing traffic to known service provider IP ranges. 2. Use cloud-relay services rather than direct peer connections where possible. 3. Implement application-aware firewall policies for video conferencing."
+  severity: Low
+  remediation_effort: long_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Real-time communications services shall be controlled."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: N
+    UI: N
+    S: U
+    C: L
+    I: N
+    A: N
+
+- id: FW-082
+  title: "MQTT IoT Protocol Exposed (TCP 1883/8883)"
+  description: "MQTT broker ports (TCP 1883 unencrypted or 8883 TLS) are accessible from untrusted sources. MQTT is the primary IoT messaging protocol and is frequently misconfigured without authentication."
+  impact: "Exposed MQTT brokers allow unauthenticated subscription to all IoT device topics, enabling surveillance, control of IoT devices, and lateral movement into IoT network segments."
+  recommendation: "1. Block MQTT ports from all untrusted sources. 2. Enable MQTT authentication and authorisation. 3. Use TLS-only MQTT (8883). 4. Implement MQTT topic-level access control. 5. Place MQTT broker in isolated IoT VLAN."
+  severity: High
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_ports
+        operator: matches
+        value: 1883
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "IoT device communications shall be restricted and authenticated."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: L
+
+- id: FW-083
+  title: "RDP Permitted on Non-Standard Ports"
+  description: "Remote Desktop Protocol is permitted on non-standard ports (not 3389), suggesting an attempt to obscure RDP exposure. Security by obscurity does not reduce the actual risk."
+  impact: "RDP running on non-standard ports is discovered by modern port scanners within minutes. The underlying RDP vulnerabilities and risks remain identical regardless of port number."
+  recommendation: "1. Treat RDP on non-standard ports with the same urgency as standard-port RDP. 2. Implement proper access controls (VPN, specific source IPs) rather than port obfuscation. 3. Consider replacing RDP with a zero-trust remote access solution."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Remote access controls shall not rely on security by obscurity."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: H
+    A: L

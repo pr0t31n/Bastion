@@ -1,0 +1,167 @@
+# Bastion Audit Rules — Executive Environment Profile
+# Loaded when executive_profile == True (in addition to base rules)
+# FW-100 series: heightened risk for C-suite, board, and executive environments
+
+- id: FW-100
+  title: "Executive Env: Guest Network Not Isolated from Corporate"
+  description: "Guest/visitor wireless or network segment can communicate with corporate resources. Executive environments are high-value targets and guests must have zero access to internal segments."
+  impact: "A threat actor, journalist, or corporate spy posing as a visitor could pivot from the guest network to executive communications, email systems, or board-level documents."
+  recommendation: "1. Isolate guest VLAN with deny-all to all corporate subnets. 2. Permit only internet-bound traffic from guest segment. 3. Implement client isolation on guest wireless. 4. Log all guest traffic to a SIEM."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Guest networks shall be completely isolated from corporate resources."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "Guest networks shall be segregated with no access to internal systems."
+  cvss_components:
+    AV: A
+    AC: L
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: L
+
+- id: FW-101
+  title: "Executive Env: Personal IoT Devices Reachable from Corporate Network"
+  description: "Rules permit traffic to/from IP ranges or ports associated with consumer IoT devices (smart TVs, streaming, home assistants). These devices typically have poor security hygiene and no patch cadence."
+  impact: "Nation-state actors routinely compromise executive IoT devices for intelligence gathering. Cross-segment access creates a pivot path to executive communications and data."
+  recommendation: "1. Create a dedicated IoT VLAN with no route to corporate. 2. Restrict IoT segment to internet-only with content filtering. 3. Block known IoT management ports (8883, 1883, 8888) from corporate. 4. Implement network access control (NAC) to enforce device placement."
+  severity: High
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    or:
+      - field: dst_ports
+        operator: matches
+        value: 8883
+      - field: dst_ports
+        operator: matches
+        value: 1883
+      - field: dst_ports
+        operator: matches
+        value: 8888
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "IoT devices in executive environments shall be isolated from corporate systems."
+  cvss_components:
+    AV: A
+    AC: H
+    PR: N
+    UI: N
+    S: C
+    C: H
+    I: M
+    A: L
+
+- id: FW-102
+  title: "Executive Env: AV/Conferencing Ports Exposed Internally Without Restriction"
+  description: "Audio/visual and conferencing equipment ports (Crestron, AMX, Extron, Zoom Rooms hardware) are reachable from all internal segments. These devices are rarely patched and frequently have default credentials."
+  impact: "AV equipment in executive boardrooms and conference rooms can be compromised via network access, enabling audio/video eavesdropping on confidential meetings."
+  recommendation: "1. Place AV equipment on a dedicated AV VLAN. 2. Restrict access to AV management ports to AV management workstations only. 3. Block Crestron (41794/41796), Extron (23/80), AMX (1319) from general users. 4. Enable logging on all rules touching the AV segment."
+  severity: Medium
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+      - or:
+          - field: dst_ports
+            operator: matches
+            value: 41794
+          - field: dst_ports
+            operator: matches
+            value: 41796
+          - field: dst_ports
+            operator: matches
+            value: 1319
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "CM-7"
+      control: "Least Functionality"
+      requirement: "AV and conferencing systems shall be restricted to authorised management access only."
+  cvss_components:
+    AV: A
+    AC: L
+    PR: L
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: L
+
+- id: FW-103
+  title: "Executive Env: No Zero-Trust Access Control for VPN/Remote Access"
+  description: "Remote access to the executive environment relies on traditional VPN without identity-aware, device-posture-based controls. Executive accounts are high-value phishing targets."
+  impact: "Compromised VPN credentials grant full network access without posture validation. Executive accounts with VPN access are primary targets for credential theft and phishing campaigns."
+  recommendation: "1. Implement zero-trust network access (ZTNA) for all executive remote connections. 2. Require MFA with phishing-resistant methods (FIDO2/hardware token) for all access. 3. Enforce device posture checks before granting access. 4. Log and alert on all executive remote access sessions."
+  severity: High
+  remediation_effort: long_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "AC-17"
+      control: "Remote Access"
+      requirement: "Executive remote access shall require phishing-resistant MFA and device posture verification."
+    - id: "ISO 27001"
+      section: "A.8.20"
+      control: "Network Security"
+      requirement: "Remote access for high-privilege users shall be protected with enhanced controls."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: L
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: L
+
+- id: FW-104
+  title: "Executive Env: Logging Disabled on Rules Covering Executive Subnets"
+  description: "Permit rules covering identified executive subnets have logging disabled, creating a forensic blind spot in the highest-value segment of the network."
+  impact: "Without logging on executive network segments, security teams cannot detect or investigate threats targeting the most sensitive users and data in the organisation."
+  recommendation: "Enable logging on ALL rules that permit traffic to or from executive subnets. Route logs to immutable SIEM storage. Set alerts for anomalous connection patterns."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: logging
+        operator: equals
+        value: false
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "AU-2"
+      control: "Event Logging"
+      requirement: "All traffic involving executive systems shall be logged."
+    - id: "NIST SP 800-53"
+      section: "AU-12"
+      control: "Audit Record Generation"
+      requirement: "Audit records shall be generated for all access to executive network segments."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: N
+    A: N

@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Bastion &mdash; Projects{% endblock %}
+
+{% block content %}
+<div class="index-header">
+  <div class="index-title">Projects</div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span style="font-size:12px;color:var(--text-muted)">{{ projects|length }} project{% if projects|length != 1 %}s{% endif %}</span>
+    <a href="{{ url_for('new_project') }}" class="btn btn-primary">+ New Project</a>
+  </div>
+</div>
+
+{% if projects %}
+<div class="projects-grid">
+  {% for p in projects %}
+  <div class="project-card" onclick="window.location='/project/{{ p.id }}'">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px">
+      <div class="project-card-title">{{ p.name|e }}</div>
+      <span class="status-badge status-{{ p.status|default('created') }}">
+        {{ p.status|default("created")|capitalize }}</span>
+    </div>
+    <div class="project-card-client">
+      {{ p.client_name|e }}{% if p.consultant_name %} &bull; {{ p.consultant_name|e }}{% endif %}
+    </div>
+    {% if p.executive_profile %}
+    <div style="font-size:10px;color:var(--danger);font-weight:700;margin-bottom:6px">
+      &#9873; Executive Profile
+    </div>
+    {% endif %}
+    <div class="project-card-meta">
+      <span>{{ p.created|default("") }}</span>
+      {% if p.findings_count %}
+      <span>{{ p.findings_count }} findings</span>
+      {% endif %}
+      {% if p.risk_summary %}
+      <div class="risk-mini-pills">
+        {% if p.risk_summary.get("Critical") %}
+        <span class="risk-mini-pill" style="background:#FF00FF;color:#fff">C:{{ p.risk_summary.Critical }}</span>
+        {% endif %}
+        {% if p.risk_summary.get("High") %}
+        <span class="risk-mini-pill" style="background:#E7716F;color:#fff">H:{{ p.risk_summary.High }}</span>
+        {% endif %}
+        {% if p.risk_summary.get("Medium") %}
+        <span class="risk-mini-pill" style="background:#FFC000;color:#1a1200">M:{{ p.risk_summary.Medium }}</span>
+        {% endif %}
+        {% if p.risk_summary.get("Low") %}
+        <span class="risk-mini-pill" style="background:#92D050;color:#1a1200">L:{{ p.risk_summary.Low }}</span>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px">
+      <a href="{{ url_for('edit_project', project_id=p.id) }}" class="btn btn-ghost btn-sm"
+         onclick="event.stopPropagation()">Edit</a>
+      <a href="{{ url_for('project_page', project_id=p.id) }}" class="btn btn-secondary btn-sm">Open</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="no-projects">
+  <div style="font-family:var(--font-display);font-size:20px;color:var(--accent-primary);margin-bottom:8px">
+    No projects yet
+  </div>
+  <p style="color:var(--text-muted);margin-bottom:20px">
+    Create a project to start analyzing firewall configurations.
+  </p>
+  <a href="{{ url_for('new_project') }}" class="btn btn-primary">+ Create First Project</a>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,98 @@
+# Bastion Audit Rules — Cato Networks SD-WAN/SASE overlay
+# Loaded automatically when vendor == "cato"
+
+- id: FW-200
+  title: "Cato WAN Firewall: Any-Any Permit Rule"
+  description: "A WAN firewall rule permits all traffic with no source, destination, or service restrictions across SD-WAN sites."
+  impact: "Unrestricted site-to-site traffic bypasses intended network segmentation, allowing lateral movement between all connected sites."
+  recommendation: "Replace any-any rules with specific site-to-site policies. Define explicit allowed traffic per application and direction."
+  severity: Critical
+  remediation_effort: immediate
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: src_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+      - field: dst_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Site-to-site SD-WAN policies shall restrict traffic to required flows only."
+    - id: "ISO 27001"
+      section: "A.8.22"
+      control: "Segregation of Networks"
+      requirement: "SD-WAN sites shall be segregated with explicit policies."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: L
+    UI: N
+    S: C
+    C: H
+    I: H
+    A: H
+
+- id: FW-201
+  title: "Cato Internet Firewall: Outbound Any-Any Permit"
+  description: "Internet-bound traffic is permitted without application or destination restriction, bypassing CASB and URL filtering controls."
+  impact: "Users can reach any internet destination on any port, enabling data exfiltration and access to malicious infrastructure."
+  recommendation: "Enable Cato CASB and URL Filtering. Define explicit application allow-lists for internet access. Block all non-approved traffic by default."
+  severity: High
+  remediation_effort: short_term
+  check_type: rule_criteria
+  criteria:
+    and:
+      - field: action
+        operator: equals
+        value: "permit"
+      - field: dst_addresses
+        operator: contains
+        value: "0.0.0.0/0"
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "SC-7"
+      control: "Boundary Protection"
+      requirement: "Internet-bound traffic shall be subject to application-layer controls."
+  cvss_components:
+    AV: N
+    AC: L
+    PR: N
+    UI: N
+    S: U
+    C: H
+    I: M
+    A: N
+
+- id: FW-202
+  title: "Cato: No Identity-Based Policy — All Rules Use IP/Network Only"
+  description: "All firewall rules use IP addresses or network objects with no user or group identity conditions, missing the zero-trust identity layer."
+  impact: "Any device with a matching IP can traverse permitted paths regardless of user identity, reducing the effectiveness of the SASE model."
+  recommendation: "Migrate rules to identity-based policies using Cato's user/group identity conditions where possible."
+  severity: Medium
+  remediation_effort: long_term
+  check_type: rulebase_structure
+  frameworks:
+    - id: "NIST SP 800-53"
+      section: "AC-17"
+      control: "Remote Access"
+      requirement: "Remote access policies shall incorporate identity verification."
+    - id: "ISO 27001"
+      section: "A.8.20"
+      control: "Network Security"
+      requirement: "Identity-based access controls shall be implemented in SASE environments."
+  cvss_components:
+    AV: N
+    AC: H
+    PR: N
+    UI: N
+    S: U
+    C: M
+    I: M
+    A: N
