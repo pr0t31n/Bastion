@@ -23,7 +23,7 @@ from werkzeug.utils import secure_filename
 import _auth
 from engine.parsers.base import detect_vendor, get_parser
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -340,15 +340,20 @@ def api_arbiter_projects():
         live = _analysis_status.get(pid, {})
         running = live.get("status") == "running"
         result.append({
-            "id":           pid,
-            "name":         project_name,
-            "client_name":  client_name,
-            "tool":         "bastion",
-            "project_dir":  proj.get("project_dir", ""),
-            "status":       "running" if running else proj_status,
-            "finding_count": proj.get("findings_count", 0),
-            "has_findings": bool(proj.get("findings_count", 0)),
-            "created":      proj.get("created", ""),
+            "id":               pid,
+            "name":             project_name,
+            "client_name":      client_name,
+            "client_short":     proj.get("client_short", ""),
+            "consultant":       proj.get("consultant_name", ""),
+            "consultant_email": proj.get("consultant_email", ""),
+            "start_date":       proj.get("start_date", ""),
+            "end_date":         proj.get("end_date", ""),
+            "tool":             "bastion",
+            "project_dir":      proj.get("project_dir", ""),
+            "status":           "running" if running else proj_status,
+            "finding_count":    proj.get("findings_count", 0),
+            "has_findings":     bool(proj.get("findings_count", 0)),
+            "created":          proj.get("created", ""),
         })
     return jsonify(result)
 
