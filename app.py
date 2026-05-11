@@ -23,7 +23,7 @@ from werkzeug.utils import secure_filename
 import _auth
 from engine.parsers.base import detect_vendor, get_parser
 
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -1697,4 +1697,5 @@ if __name__ == "__main__":
     ssl_ctx = _auth.make_ssl_context()
     logger.info(f"Starting Bastion v{VERSION} on https://0.0.0.0:5600")
     socketio.run(app, host="0.0.0.0", port=5600,
-                 ssl_context=ssl_ctx, debug=False)
+                 ssl_context=ssl_ctx, debug=False,
+                 allow_unsafe_werkzeug=True)
