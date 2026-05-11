@@ -6,6 +6,7 @@ import socket
 import json
 import logging
 import os
+import platform as _platform
 import shutil
 import threading
 import traceback
@@ -23,7 +24,7 @@ from werkzeug.utils import secure_filename
 import _auth
 from engine.parsers.base import detect_vendor, get_parser
 
-VERSION = "1.2.3"
+VERSION = "1.2.4"
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -109,10 +110,27 @@ def save_projects(data: dict) -> None:
             logger.error(f"save_projects error: {e}")
 
 
+def _clients_base() -> Path:
+    """Return the OS-appropriate clients root directory, creating it if absent."""
+    system = _platform.system()
+    if system == "Darwin":
+        base = Path("/Users/Shared/clients")
+    elif system == "Windows":
+        base = Path("C:/clients")
+    else:
+        base = Path("/clients")
+    try:
+        base.mkdir(parents=True, exist_ok=True)
+    except PermissionError:
+        base = Path.home() / "clients"
+        base.mkdir(parents=True, exist_ok=True)
+    return base
+
+
 def _project_dir_for(project_id: str) -> str:
     raw = load_projects()
     pinfo = raw.get("projects", {}).get(project_id, {})
-    return pinfo.get("project_dir", os.path.join(_BASE_DIR, "projects", project_id))
+    return pinfo.get("project_dir", str(_clients_base() / "bastion" / project_id))
 
 
 def _compute_framework_summary(findings_dicts: list) -> dict:
@@ -413,7 +431,7 @@ def api_create_project():
             return jsonify({"error": "Project name is required"}), 400
 
         project_id = str(uuid.uuid4())[:8]
-        project_dir = Path(_BASE_DIR) / "projects" / project_id
+        project_dir = _clients_base() / "bastion" / project_id
         project_dir.mkdir(parents=True, exist_ok=True)
         (project_dir / "configs").mkdir(exist_ok=True)
         (project_dir / "reports").mkdir(exist_ok=True)
@@ -1660,7 +1678,7 @@ def api_execute_project():
             return jsonify({"error": "Project name is required"}), 400
 
         project_id  = str(uuid.uuid4())[:8]
-        project_dir = Path(_BASE_DIR) / "projects" / project_id
+        project_dir = _clients_base() / "bastion" / project_id
         project_dir.mkdir(parents=True, exist_ok=True)
         (project_dir / "configs").mkdir(exist_ok=True)
         (project_dir / "reports").mkdir(exist_ok=True)

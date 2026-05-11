@@ -12,6 +12,7 @@ venv/
 
 # Bastion runtime data
 projects.json
+projects/
 data/
 spec_staging/
 *.png
