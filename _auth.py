@@ -394,6 +394,7 @@ def auth_gate():
     # Exempt paths
     if (
         path.startswith("/static/")
+        or path.startswith("/socket.io/")
         or path in ("/login", "/logout", "/api/nexus-status")
     ):
         return None

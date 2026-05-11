@@ -23,7 +23,7 @@ from werkzeug.utils import secure_filename
 import _auth
 from engine.parsers.base import detect_vendor, get_parser
 
-VERSION = "1.2.2"
+VERSION = "1.2.3"
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -48,12 +48,12 @@ logger = logging.getLogger("bastion")
 app = Flask(__name__)
 app.config["SECRET_KEY"] = _auth.load_secret_key()
 app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
-app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SECURE"] = False  # self-signed cert; HTTPS enforced server-side
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["PERMANENT_SESSION_LIFETIME"] = 1800  # 30 min
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading", manage_session=False)
 
 # ---------------------------------------------------------------------------
 # Per-project state buffers
@@ -356,6 +356,45 @@ def api_arbiter_projects():
             "created":          proj.get("created", ""),
         })
     return jsonify(result)
+
+
+@app.route("/api/projects/<project_id>/status")
+def api_project_status(project_id):
+    """Standardized status endpoint polled by Arbiter's scan_poll_worker."""
+    raw = load_projects()
+    if project_id not in raw.get("projects", {}):
+        return jsonify({"error": "not found"}), 404
+
+    live = _analysis_status.get(project_id, {})
+    running = live.get("status") == "running"
+
+    queue_position = None
+    with _queue_lock:
+        for i, job in enumerate(_job_queue):
+            if job.get("project_id") == project_id:
+                queue_position = i + 1
+                break
+
+    if running:
+        overall = "running"
+    elif queue_position is not None:
+        overall = "queued"
+    else:
+        s = raw["projects"][project_id].get("status", "created")
+        if s in ("completed", "complete", "done"):
+            overall = "complete"
+        elif s == "error":
+            overall = "error"
+        else:
+            overall = "idle"
+
+    return jsonify({
+        "project_id":     project_id,
+        "status":         overall,
+        "tool":           "bastion",
+        "progress":       live.get("percent"),
+        "queue_position": queue_position,
+    })
 
 
 # ---------------------------------------------------------------------------
