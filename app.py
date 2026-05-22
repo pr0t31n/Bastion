@@ -24,7 +24,34 @@ from werkzeug.utils import secure_filename
 import _auth
 from engine.parsers.base import detect_vendor, get_parser
 
-VERSION = "1.2.4"
+VERSION = "1.6.0"
+
+
+def _u_dual_write_meta(project_dir, *, tool: str, version: str,
+                       client_short: str = "", client_name: str = "",
+                       engagement_name: str = "", target: str = "") -> bool:
+    """Write universal meta.json (schema 1.0). Graceful no-op when
+    /opt/pr0t31n/shared/pr0t31n_schema.py is not installed."""
+    try:
+        import sys as _s
+        if "/opt/pr0t31n/shared" not in _s.path:
+            _s.path.insert(0, "/opt/pr0t31n/shared")
+        import pr0t31n_schema as _us
+    except ImportError:
+        return False
+    try:
+        meta = _us.make_meta(
+            tool=tool, version=version,
+            client_short=client_short or "unknown",
+            client_name=client_name or client_short or "unknown",
+            engagement_name=engagement_name or f"{tool} run",
+            target=target or "",
+        )
+        _us.atomic_write_json(Path(project_dir) / "meta.json", meta)
+        return True
+    except Exception:
+        return False
+
 
 # ---------------------------------------------------------------------------
 # App setup
@@ -435,6 +462,15 @@ def api_create_project():
         project_dir.mkdir(parents=True, exist_ok=True)
         (project_dir / "configs").mkdir(exist_ok=True)
         (project_dir / "reports").mkdir(exist_ok=True)
+
+        # Dual-write universal meta.json (schema 1.0) for Prometheus UniversalParser.
+        _u_dual_write_meta(
+            project_dir, tool="bastion", version=VERSION,
+            client_short=request.form.get("client_short", ""),
+            client_name=request.form.get("client_name", ""),
+            engagement_name=project_name,
+            target=request.form.get("client_name", "") or project_name,
+        )
 
         raw = load_projects()
         raw.setdefault("projects", {})[project_id] = {
@@ -1056,6 +1092,19 @@ def _run_analysis(project_id: str, project_dir: str,
         with open(findings_path, "w") as f:
             json.dump(findings_data, f, indent=2)
 
+        # ── Universal findings synthesis (v1.1) ──────────────────────
+        # Bastion's native findings.json is dict-wrapped: {"findings": [...]}
+        # Synthesise a universal v1.1 finding array next to it so Prometheus's
+        # UniversalParser sees the same data via the canonical schema.
+        # Native Bastion fields that map directly:
+        #   audit_rule_id     → catalogue_id (PHX-style identifier)
+        #   evidence (list)   → output (joined)
+        #   triggered_lines   → preserved in output
+        #   cvss_score/vector → v1.1 cvss_score / cvss_vector
+        #   accepted          → v1.1 accepted
+        #   framework_*       → v1.1 compliance lists when known
+        _bs_synthesize_universal_findings(project_dir, findings_dicts)
+
         # Generate diagram
         _analysis_status[project_id] = {
             "status": "running",
@@ -1231,6 +1280,218 @@ def api_delete_finding():
 
         return jsonify({"ok": True})
 
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ── False-positive management ────────────────────────────────────────────────
+# Uses /opt/pr0t31n/shared/pr0t31n_false_positives.py. Mark removes the
+# finding from findings.json (Bastion stores findings under fd["findings"]),
+# adds it to false_positives.json + false_positives.csv. Recover reverses.
+_BS_FP_CSV_FIELDS = [
+    "id", "title", "audit_rule_id", "severity", "risk", "category",
+    "description", "remediation", "evidence", "vendor", "config_file",
+]
+
+
+def _bs_load_fp_helper():
+    try:
+        import sys as _s
+        if "/opt/pr0t31n/shared" not in _s.path:
+            _s.path.insert(0, "/opt/pr0t31n/shared")
+        import pr0t31n_false_positives as _fp
+        return _fp
+    except ImportError:
+        return None
+
+
+def _bs_synthesize_universal_findings(project_dir, findings_list):
+    """Write a universal v1.1 findings.json + summary.json alongside Bastion's
+    native dict-wrapped findings.json. Maps Bastion-specific fields to v1.1.
+    Graceful no-op if /opt/pr0t31n/shared/pr0t31n_schema.py is not installed."""
+    try:
+        import sys as _s
+        if "/opt/pr0t31n/shared" not in _s.path:
+            _s.path.insert(0, "/opt/pr0t31n/shared")
+        import pr0t31n_schema as _us
+    except ImportError:
+        return
+    try:
+        mapped = []
+        risk_counts = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
+        for f in (findings_list or []):
+            if not isinstance(f, dict):
+                continue
+            triggered = f.get("triggered_raw") or []
+            evidence_str = "\n".join(triggered) if isinstance(triggered, list) else str(triggered)
+            risk = str(f.get("risk") or f.get("severity") or "INFO").upper()
+            if risk in risk_counts:
+                risk_counts[risk] += 1
+            # Lift framework_section / framework into v1.1 compliance lists.
+            fw = (f.get("framework") or "").upper()
+            fw_section = f.get("framework_section") or ""
+            nist_800_53 = [fw_section] if "NIST" in fw and "800-53" in fw and fw_section else []
+            nist_csf2   = [fw_section] if "NIST" in fw and "CSF" in fw and fw_section else []
+            iso_27001   = [fw_section] if "ISO" in fw and fw_section else []
+            pci_dss_4   = [fw_section] if "PCI" in fw and fw_section else []
+            mapped.append({
+                "title":             f.get("title", ""),
+                "datetime":          f.get("datetime") or f.get("timestamp", ""),
+                "ip":                "",   # Bastion is config-audit, not host-targeted
+                "port":              0,
+                "hostname":          "",
+                "risk":              risk,
+                "command":           "bastion config-audit",
+                "description":       f.get("description", ""),
+                "output":            (f.get("description", "") + "\n\n" + evidence_str)[:8192],
+                "output_file":       f.get("config_file", ""),
+                "cves":              ",".join(f.get("cves", []) or []) if isinstance(f.get("cves"), list) else (f.get("cves") or ""),
+                "sources":           "bastion",
+                "service":           "firewall-config",
+                "affected":          f.get("config_file", ""),
+                "remediation":       f.get("remediation", "Review firewall configuration."),
+                "exploitdb":         False,
+                "metasploit":        False,
+                "exploit_details":   [],
+                "phase":             f.get("category", ""),
+                "catalogue_id":      f.get("audit_rule_id", ""),
+                # ── v1.1 enrichment — Bastion knows these natively ─────────
+                "cvss_score":        f.get("cvss_score"),
+                "cvss_vector":       f.get("cvss_vector", ""),
+                "accepted":          bool(f.get("accepted", False)),
+                "nist_800_53":       nist_800_53,
+                "nist_csf2":         nist_csf2,
+                "iso_27001":         iso_27001,
+                "pci_dss_4":         pci_dss_4,
+                "confidence":        "Certain" if not f.get("validation_required") else "Tentative",
+            })
+        _us.write_universal_findings(project_dir, mapped,
+                                     tool="bastion", scope=None, phase="")
+        from datetime import datetime as _dt, timezone as _tz
+        now = _dt.now(_tz.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        _us.write_summary(project_dir, _us.make_summary(
+            tool="bastion", version=VERSION,
+            scan_start=now, scan_end=now,
+            target="firewall-config", success=True,
+            total_findings=len(mapped), risk_counts=risk_counts,
+        ))
+    except Exception:
+        # Bastion analysis must not fail because of universal-write trouble.
+        pass
+
+
+def _bs_read_findings_doc(pdir):
+    """Load Bastion's findings.json. Returns the wrapper dict (or None)."""
+    p = os.path.join(pdir, "findings.json")
+    if not os.path.exists(p):
+        return None
+    try:
+        with open(p) as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else None
+    except Exception:
+        return None
+
+
+def _bs_write_findings_doc(pdir, doc):
+    p = os.path.join(pdir, "findings.json")
+    with open(p, "w") as f:
+        json.dump(doc, f, indent=2)
+
+
+@app.route("/api/mark_false_positive", methods=["POST"])
+def api_mark_false_positive():
+    """Move a finding from findings.json to false_positives.{json,csv}."""
+    try:
+        data = request.get_json(force=True) or {}
+        project_id = data.get("project_id", "").strip()
+        finding_id = data.get("finding_id", "").strip()
+        if not project_id or not finding_id:
+            return jsonify({"error": "project_id and finding_id required"}), 400
+
+        raw = load_projects()
+        pinfo = raw.get("projects", {}).get(project_id)
+        if not pinfo:
+            return jsonify({"error": "Project not found"}), 404
+        pdir = pinfo.get("project_dir", _project_dir_for(project_id))
+
+        fp_helper = _bs_load_fp_helper()
+        if fp_helper is None:
+            return jsonify({"error": "pr0t31n_false_positives helper not installed"}), 500
+
+        doc = _bs_read_findings_doc(pdir)
+        if doc is None:
+            return jsonify({"error": "findings.json not found"}), 404
+
+        removed = None
+        kept = []
+        for fi in doc.get("findings", []):
+            if fi.get("id") == finding_id and removed is None:
+                removed = fi
+            else:
+                kept.append(fi)
+        if removed is None:
+            return jsonify({"error": "Finding not found"}), 404
+
+        removed["marked_fp_at"] = _ts()
+        doc["findings"] = kept
+        _bs_write_findings_doc(pdir, doc)
+        fp_helper.add_false_positive(pdir, removed, csv_fieldnames=_BS_FP_CSV_FIELDS)
+        return jsonify({"ok": True, "finding": removed})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/recover_false_positive", methods=["POST"])
+def api_recover_false_positive():
+    """Move a finding from false_positives.{json,csv} back to findings.json."""
+    try:
+        data = request.get_json(force=True) or {}
+        project_id = data.get("project_id", "").strip()
+        finding_id = data.get("finding_id", "").strip()
+        if not project_id or not finding_id:
+            return jsonify({"error": "project_id and finding_id required"}), 400
+
+        raw = load_projects()
+        pinfo = raw.get("projects", {}).get(project_id)
+        if not pinfo:
+            return jsonify({"error": "Project not found"}), 404
+        pdir = pinfo.get("project_dir", _project_dir_for(project_id))
+
+        fp_helper = _bs_load_fp_helper()
+        if fp_helper is None:
+            return jsonify({"error": "pr0t31n_false_positives helper not installed"}), 500
+
+        recovered = fp_helper.remove_false_positive(pdir, finding_id,
+                                                     csv_fieldnames=_BS_FP_CSV_FIELDS)
+        if recovered is None:
+            return jsonify({"error": "Finding not found in false_positives.json"}), 404
+        recovered.pop("marked_fp_at", None)
+
+        doc = _bs_read_findings_doc(pdir) or {"findings": []}
+        doc.setdefault("findings", [])
+        # Skip re-insertion if it somehow already exists
+        if not any(fi.get("id") == finding_id for fi in doc["findings"]):
+            doc["findings"].append(recovered)
+        _bs_write_findings_doc(pdir, doc)
+        return jsonify({"ok": True, "finding": recovered})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/api/false_positives/<project_id>")
+def api_false_positives_list(project_id):
+    """List all false-positive findings for a project."""
+    try:
+        raw = load_projects()
+        pinfo = raw.get("projects", {}).get(project_id)
+        if not pinfo:
+            return jsonify({"false_positives": []}), 404
+        pdir = pinfo.get("project_dir", _project_dir_for(project_id))
+        fp_helper = _bs_load_fp_helper()
+        if fp_helper is None:
+            return jsonify({"false_positives": []})
+        return jsonify({"false_positives": fp_helper.load_false_positives(pdir)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

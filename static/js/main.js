@@ -527,6 +527,7 @@ function renderFindingsTable(findings) {
     const acceptBtn = f.accepted
       ? `<button class="btn btn-sm btn-ghost" onclick='unacceptFinding("${f.id}")'>Un-Accept</button>`
       : `<button class="btn btn-sm btn-ghost" onclick='openAcceptModal("${f.id}","${_esc(f.title).replace(/'/g,"&#39;")}">Accept</button>`;
+    const fpBtn = `<button class="btn btn-sm btn-ghost" title="Mark as false positive" onclick='markFp("${f.id}",this)'>🚫 FP</button>`;
 
     return `
     <tr id="finding-row-${f.id}" class="findings-row${accepted}${isNew}${changed}">
@@ -540,10 +541,103 @@ function renderFindingsTable(findings) {
         <button class="btn btn-sm btn-ghost" onclick='openFindingDetail("${f.id}")'>Details</button>
         <button class="btn btn-sm btn-ghost" onclick='viewFindingInConfig(${JSON.stringify({id:f.id,config_file:f.config_file,triggered_lines:f.triggered_lines})})'>View</button>
         ${acceptBtn}
+        ${fpBtn}
       </td>
     </tr>`;
   }).join("");
 }
+
+// ── False-positive management ─────────────────────────────────────────────
+// Mark removes finding from findings.json (Bastion-wrapped) + adds to
+// false_positives.json + false_positives.csv. Recover does the reverse.
+// 'Show False Positives' replaces the active-findings table with the FP list.
+let _fpShown = false;
+
+async function markFp(findingId, btn) {
+  if (!findingId) return;
+  if (!confirm("Mark this finding as a false positive? It will be moved to false_positives.json/csv and can be recovered later.")) return;
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+  try {
+    const r = await fetch("/api/mark_false_positive", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({project_id: PROJECT_ID, finding_id: findingId}),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || `HTTP ${r.status}`);
+    _allFindings = _allFindings.filter(fi => fi.id !== findingId);
+    renderFindingsTable(_allFindings);
+  } catch (e) {
+    alert("Mark as false positive failed: " + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "🚫 FP"; }
+  }
+}
+
+async function recoverFp(findingId, btn) {
+  if (!findingId) return;
+  if (btn) { btn.disabled = true; btn.textContent = "…"; }
+  try {
+    const r = await fetch("/api/recover_false_positive", {
+      method: "POST", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({project_id: PROJECT_ID, finding_id: findingId}),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || `HTTP ${r.status}`);
+    const row = document.querySelector(`#fp-row-${findingId}`);
+    if (row) row.remove();
+    // Refresh active findings so the recovered one is in the list when toggled off
+    try {
+      const rf = await fetch(`/api/findings/${PROJECT_ID}`);
+      const df = await rf.json();
+      _allFindings = df.findings || [];
+    } catch {}
+  } catch (e) {
+    alert("Recover failed: " + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = "↩ Recover"; }
+  }
+}
+
+async function _loadFpList() {
+  try {
+    const r = await fetch(`/api/false_positives/${PROJECT_ID}`);
+    const d = await r.json();
+    return Array.isArray(d.false_positives) ? d.false_positives : [];
+  } catch { return []; }
+}
+
+function _renderFpRow(f) {
+  const fid    = f.id || "";
+  const marked = f.marked_fp_at || "—";
+  return `<tr id="fp-row-${fid}" class="findings-row">
+    <td>${_riskBadge(f.risk)}</td>
+    <td>${_esc(f.title || "")}</td>
+    <td>${_esc(f.framework || "")}</td>
+    <td>${_esc(f.framework_section || "")}</td>
+    <td class="mono">${_esc(marked)}</td>
+    <td>${_esc(f.vendor || "")}</td>
+    <td><button class="btn btn-sm btn-ghost" onclick='recoverFp("${fid}",this)' title="Restore to active findings">↩ Recover</button></td>
+  </tr>`;
+}
+
+async function toggleFpView() {
+  _fpShown = !_fpShown;
+  const btn  = document.getElementById("btnToggleFp");
+  const tb   = document.getElementById("findingsTbody");
+  if (!tb) return;
+  if (_fpShown) {
+    if (btn) btn.textContent = "👁 Show Active Findings";
+    const fps = await _loadFpList();
+    tb.innerHTML = fps.length
+      ? fps.map(_renderFpRow).join("")
+      : `<tr class="empty-row"><td colspan="7" style="text-align:center;padding:32px;color:var(--text-muted)">No false positives.</td></tr>`;
+  } else {
+    if (btn) btn.textContent = "🚫 Show False Positives";
+    renderFindingsTable(_allFindings);
+  }
+}
+
+window.markFp       = markFp;
+window.recoverFp    = recoverFp;
+window.toggleFpView = toggleFpView;
 
 window.openFindingDetail = function(findingId) {
   const f = _allFindings.find(fi => fi.id === findingId);
@@ -600,6 +694,21 @@ window.openFindingDetail = function(findingId) {
     notesEl.value = f.analyst_notes || "";
     notesEl.dataset.findingId = findingId;
     notesEl.onblur = () => saveNote(findingId, notesEl.value);
+  }
+
+  // v1.1 enrichment row — CVSS already shown above; this adds CWE / MITRE /
+  // compliance lists / KEV / etc. when present. Renders nothing if the
+  // finding carries no v1.1 fields.
+  let enrichEl = document.getElementById("detailV11Enrichment");
+  if (!enrichEl && window.renderV11Enrichment) {
+    // Lazy-inject container at modal-body end so we don't have to edit the template
+    const body = modal.querySelector(".modal-body") || modal;
+    enrichEl = document.createElement("div");
+    enrichEl.id = "detailV11Enrichment";
+    body.appendChild(enrichEl);
+  }
+  if (enrichEl && window.renderV11Enrichment) {
+    enrichEl.innerHTML = window.renderV11Enrichment(f);
   }
 
   modal.removeAttribute("hidden");

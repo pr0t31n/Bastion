@@ -116,6 +116,11 @@
         Toggle Accepted</button>
       <span id="findingsCount" class="findings-count"></span>
       <button class="btn btn-sm btn-ghost" onclick="exportFindingsCSV()">&#8595; CSV</button>
+      <button id="btnToggleFp" class="btn btn-sm btn-ghost"
+              onclick="toggleFpView()"
+              title="Hide active findings and reveal false positives with a Recover option">
+        🚫 Show False Positives
+      </button>
     </div>
 
     <div class="findings-table-wrap">
