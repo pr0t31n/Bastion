@@ -24,7 +24,7 @@ from werkzeug.utils import secure_filename
 import _auth
 from engine.parsers.base import detect_vendor, get_parser
 
-VERSION = "1.6.0"
+VERSION = "1.7.0"
 
 
 def _u_dual_write_meta(project_dir, *, tool: str, version: str,
@@ -1494,6 +1494,36 @@ def api_false_positives_list(project_id):
         return jsonify({"false_positives": fp_helper.load_false_positives(pdir)})
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+# ─── Config-Audit Intelligence panel (shared aggregator) ─────────────────
+@app.route("/api/intel/<project_id>")
+def api_intel(project_id):
+    """Aggregated Config-Audit Intelligence (vendors / frameworks / accepted /
+    top rules-hit). Renders in the UI via the shared intel panel."""
+    try:
+        import sys as _s
+        if "/opt/pr0t31n/shared" not in _s.path:
+            _s.path.insert(0, "/opt/pr0t31n/shared")
+        import pr0t31n_intel as intel
+    except ImportError:
+        return jsonify({"error": "pr0t31n_intel not installed"}), 500
+    raw = load_projects()
+    pinfo = raw.get("projects", {}).get(project_id)
+    if not pinfo:
+        return jsonify({"error": "project not found"}), 404
+    pdir = pinfo.get("project_dir", _project_dir_for(project_id))
+    # Bastion findings live in the dict-wrapped findings.json; flatten for the aggregator
+    findings_path = os.path.join(pdir, "findings.json")
+    if not os.path.exists(findings_path):
+        return jsonify(intel.aggregator_config([]))
+    try:
+        with open(findings_path) as f:
+            data = json.load(f)
+        findings = data.get("findings", []) if isinstance(data, dict) else (data or [])
+    except Exception:
+        findings = []
+    return jsonify(intel.aggregator_config(findings))
 
 
 @app.route("/api/accept_finding", methods=["POST"])
