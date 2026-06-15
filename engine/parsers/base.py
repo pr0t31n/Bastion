@@ -208,8 +208,19 @@ def detect_vendor(config_text: str, filename: str) -> str:
 
     checks = [
         (r"ASA Version\s+[\d.]+|Cisco Adaptive Security Appliance", "cisco_asa"),
+        # 2026-06-11: IOS-XR detected before plain IOS to avoid mis-tag,
+        # and pfSense / OPNsense (XML root) detected separately.
+        (r"IOS\s*XR.*Version|ASR9", "cisco_iosxr"),
         (r"#\s*\$EPIC|ip access-list extended", "cisco_ios"),
         (r"NGFW Version|Cisco Firepower", "cisco_ftd"),
+        (r"<pfsense>|<opnsense>", "pfsense"),
+        # 2026-06-11 review round 4 additions
+        (r'"SecurityGroups"\s*:\s*\[', "aws_sg"),
+        (r'"NetworkAcls"\s*:\s*\[',    "aws_nacl"),
+        (r"^/ip firewall|^# RouterOS|^# software ID", "mikrotik"),
+        # 2026-06-11 review round 5 additions
+        (r'"securityRules"\s*:|Microsoft\.Network/networkSecurityGroups', "azure_nsg"),
+        (r'"IPProtocol"\s*:|"sourceRanges"\s*:|gcloud compute firewall-rules', "gcp_vpc"),
         (r"config system global|FortiGate-\d+|#config-version=", "fortinet"),
         (r"set deviceconfig system hostname|<config version=.*pan", "palo_alto"),
         (r":type \(network-object\)|SmartDashboard|fw1_implied", "checkpoint"),
@@ -277,6 +288,19 @@ def _ensure_parsers_loaded() -> None:
         return
     try:
         from engine.parsers import cisco_asa      # noqa: F401
+        # 2026-06-11 review fix: cisco_ios and cisco_ftd were detected by
+        # the vendor regex but NEVER loaded, so they fell through to the
+        # 'unknown' parser and audit findings were not generated.
+        from engine.parsers import cisco_ios      # noqa: F401
+        from engine.parsers import cisco_ftd      # noqa: F401
+        from engine.parsers import cisco_iosxr    # noqa: F401 (2026-06-11 review)
+        from engine.parsers import pfsense        # noqa: F401 (2026-06-11 review)
+        # 2026-06-11 review round 4
+        from engine.parsers import mikrotik       # noqa: F401
+        from engine.parsers import aws_sg         # noqa: F401
+        # 2026-06-11 review round 5
+        from engine.parsers import azure_nsg      # noqa: F401
+        from engine.parsers import gcp_vpc        # noqa: F401
         from engine.parsers import palo_alto      # noqa: F401
         from engine.parsers import fortinet       # noqa: F401
         from engine.parsers import checkpoint     # noqa: F401
