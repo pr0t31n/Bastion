@@ -267,6 +267,31 @@ Bastion/
     └── change_password.html
 ```
 
+> **Note:** Bastion 2.x is a pure-CLI orchestrator (`bastion.py`); the 1.x Flask
+> app/templates are archived. The layout above reflects the engine, which is
+> unchanged.
+
+## Run Output (universal §13)
+
+Each `bastion.py --output-dir <run_dir>` run writes a universal run directory:
+
+```
+<run_dir>/
+├── meta.json                       # tool identity / client / engagement
+├── findings.json                   # universal findings (risk UPPERCASED)
+├── findings.csv
+├── summary.json                    # risk_counts, config_files, timing
+├── scan.log / scan.log.json        # timestamped event log (§13b/§14f)
+├── errors.log / errors.log.json    # ERROR-level entries only
+└── evidence/<vendor>/
+    ├── <rule>_<ts>_excerpt.txt     # triggering config lines for the finding
+    └── <rule>_<ts>.log             # audit transcript (rule/risk/framework)
+```
+
+Every finding's `output_file` points at its `evidence/<vendor>/…_excerpt.txt`
+**and** `…​.log` pair (run-dir-relative), so each finding carries both output and
+log evidence (§14i).
+
 ---
 
 ## Changing Your Password

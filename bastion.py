@@ -38,13 +38,14 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import traceback
 from datetime import datetime, timezone
 from pathlib import Path
 
 
-VERSION = "2.0.0"   # 2.x = pure-CLI; 1.x was Flask+SocketIO
+VERSION = "2.1.0"   # 2.x = pure-CLI; 1.x was Flask+SocketIO
 
 
 # ── Shared schema helpers ──────────────────────────────────────────────
@@ -69,6 +70,17 @@ except ImportError:
     _sc = None
     _HAVE_COMPAT = False
 
+try:
+    import pr0t31n_event_log as _el
+    _HAVE_EVENTLOG = True
+except ImportError:
+    _el = None
+    _HAVE_EVENTLOG = False
+
+# §13b run-dir logger (scan.log + scan.log.json + errors.log + errors.log.json).
+# Set in main() once the run directory is known; _log/_err forward to it.
+_RUNLOG = None
+
 
 # Engine (pure-Python, untouched from Flask era)
 from engine.parsers.base import detect_vendor, get_parser
@@ -87,8 +99,16 @@ def _emit(token: str, msg: str) -> None:
         sys.stdout.write(f"{token} {msg}\n"); sys.stdout.flush()
 
 
-def _log(msg: str) -> None:    _emit("__VANTAGE_LOG__:", msg)
-def _err(msg: str) -> None:    _emit("__VANTAGE_ERR__:", msg)
+def _log(msg: str) -> None:
+    _emit("__VANTAGE_LOG__:", msg)
+    if _RUNLOG is not None:
+        try: _RUNLOG.info(msg)
+        except Exception: pass
+def _err(msg: str) -> None:
+    _emit("__VANTAGE_ERR__:", msg)
+    if _RUNLOG is not None:
+        try: _RUNLOG.error(msg)
+        except Exception: pass
 def _status(payload: dict) -> None:
     _emit("__VANTAGE_STATUS__:", json.dumps(payload, default=str))
 def _finding_token(finding: dict) -> None:
@@ -113,6 +133,46 @@ def _canon_risk(risk: str | None) -> str:
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _write_finding_evidence(fd: dict, output_dir: Path, vendor: str,
+                            config_name: str) -> str:
+    """§14i: persist a config excerpt (output) + an audit transcript .log per
+    finding, both run-dir-relative. Bastion has no subprocess/HTTP, so this is
+    the config-audit analogue of the §14 tool .log. Returns the comma-joined
+    relative paths, or '' on failure."""
+    try:
+        ts = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        rid = fd.get("audit_rule_id") or fd.get("id") or fd.get("title") or "finding"
+        safe = re.sub(r"[^\w.-]", "_", str(rid))[:60] or "finding"
+        vsafe = re.sub(r"[^\w.-]", "_", str(vendor or "config")) or "config"
+        evdir = Path(output_dir) / "evidence" / vsafe
+        evdir.mkdir(parents=True, exist_ok=True)
+        lines = fd.get("triggered_lines") or []
+        raw = fd.get("triggered_raw") or []
+        if lines and raw and len(lines) == len(raw):
+            excerpt_body = "\n".join(f"{ln}: {txt}" for ln, txt in zip(lines, raw))
+        elif raw:
+            excerpt_body = "\n".join(str(x) for x in raw)
+        else:
+            excerpt_body = "(no triggering config lines recorded)"
+        excerpt = evdir / f"{safe}_{ts}_excerpt.txt"
+        excerpt.write_text(excerpt_body, encoding="utf-8")
+        logf = evdir / f"{safe}_{ts}.log"
+        logf.write_text(
+            f"# Bastion config-audit evidence\n"
+            f"# config:     {config_name}\n"
+            f"# vendor:     {vendor}\n"
+            f"# rule:       {fd.get('audit_rule_id', '')}\n"
+            f"# finding:    {fd.get('title', '')}\n"
+            f"# risk:       {fd.get('risk', '')}\n"
+            f"# framework:  {fd.get('framework', '')} {fd.get('framework_section', '')}\n"
+            f"# triggered_lines: {lines}\n"
+            f"# excerpt_file: {excerpt.name}\n",
+            encoding="utf-8")
+        return ",".join(str(p.relative_to(Path(output_dir))) for p in (excerpt, logf))
+    except Exception:
+        return ""
 
 
 def audit_one_config(config_path: Path, *, vendor: str | None,
@@ -145,7 +205,11 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
         except Exception:
             fd = vars(f) if hasattr(f, "__dict__") else {}
         fd["risk"] = _canon_risk(fd.get("risk"))   # TitleCase → UPPERCASE (§13c)
-        if not fd.get("output_file"):
+        # §14i: every finding carries config-excerpt output + audit transcript .log
+        ev = _write_finding_evidence(fd, output_dir, vendor, config_path.name)
+        if ev:
+            fd["output_file"] = ev
+        elif not fd.get("output_file"):
             fd["output_file"] = rel_config
         if not fd.get("tool"): fd["tool"] = "bastion"
         out.append(fd)
@@ -183,6 +247,15 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s [bastion-cli] %(message)s")
+
+    # §13b: scan.log + scan.log.json + errors.log + errors.log.json in the run dir
+    global _RUNLOG
+    if _HAVE_EVENTLOG:
+        try:
+            _RUNLOG = _el.EventLogger(out_dir / "scan.log",
+                                      errors_path=out_dir / "errors.log")
+        except Exception as exc:
+            _err(f"event log init failed: {exc}")
 
     # Meta.json (universal §13)
     if _HAVE_SCHEMA:
