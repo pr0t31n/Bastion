@@ -16,6 +16,8 @@ ParseResult → list[Finding] function. This wrapper provides:
     add subprocess calls)
   * UPPERCASE risk values per §13c (fixes the Bastion TitleCase violation
     flagged in the 2026-06-11 review)
+  * Threat-intel IP/URL reputation checking against curated blocklists
+  * GeoIP country mapping for IPs referenced in firewall rules
 
 Architectural notes for the 2026-06-11 review:
   * Helm now dispatches Bastion via adapters/bastion.py.
@@ -35,17 +37,19 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ipaddress
 import json
 import logging
 import os
 import re
 import sys
 import traceback
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
 
-VERSION = "2.1.0"   # 2.x = pure-CLI; 1.x was Flask+SocketIO
+VERSION = "2.2.0"   # 2.2 = threat-intel + GeoIP; 2.x = pure-CLI; 1.x was Flask+SocketIO
 
 
 # ── Shared schema helpers ──────────────────────────────────────────────
@@ -76,6 +80,13 @@ try:
 except ImportError:
     _el = None
     _HAVE_EVENTLOG = False
+
+try:
+    import pr0t31n_threat_intel as _ti
+    _HAVE_THREAT_INTEL = True
+except ImportError:
+    _ti = None
+    _HAVE_THREAT_INTEL = False
 
 # §13b run-dir logger (scan.log + scan.log.json + errors.log + errors.log.json).
 # Set in main() once the run directory is known; _log/_err forward to it.
@@ -217,6 +228,290 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
     return out
 
 
+# ── Threat-intel helpers ──────────────────────────────────────────────
+
+
+def _is_skip_addr(addr: str) -> bool:
+    """Return True for addresses that should be skipped during TI lookup."""
+    addr = addr.strip().lower()
+    if addr in ("any", "all", "0.0.0.0", "0.0.0.0/0", "::", "::/0", ""):
+        return True
+    try:
+        if "/" in addr:
+            net = ipaddress.ip_network(addr, strict=False)
+            return net.is_private or net.is_loopback or net.is_link_local or net.is_reserved
+        else:
+            a = ipaddress.ip_address(addr)
+            return a.is_private or a.is_loopback or a.is_link_local or a.is_reserved
+    except ValueError:
+        return True
+
+
+def _extract_rule_ips(configs: list[Path], vendor_override: str | None) -> list[dict]:
+    """Re-parse configs and extract (ip, rule_id, direction, action, config_file, raw_lines)."""
+    results = []
+    for cfg in configs:
+        try:
+            text = cfg.read_text(encoding="utf-8", errors="replace")
+        except Exception:
+            continue
+        v = vendor_override or detect_vendor(text)
+        parser_cls = get_parser(v)
+        parser = parser_cls()
+        try:
+            pr = parser.parse(text)
+        except Exception:
+            continue
+        for rule in pr.rules:
+            if not rule.enabled:
+                continue
+            for addr in rule.src_addresses:
+                if not _is_skip_addr(addr):
+                    results.append({
+                        "ip": addr, "rule_id": rule.rule_id,
+                        "rule_name": rule.rule_name,
+                        "direction": "source", "action": rule.action.lower(),
+                        "config_file": cfg.name, "raw_lines": rule.raw_lines,
+                        "line_number": rule.line_number,
+                    })
+            for addr in rule.dst_addresses:
+                if not _is_skip_addr(addr):
+                    results.append({
+                        "ip": addr, "rule_id": rule.rule_id,
+                        "rule_name": rule.rule_name,
+                        "direction": "destination", "action": rule.action.lower(),
+                        "config_file": cfg.name, "raw_lines": rule.raw_lines,
+                        "line_number": rule.line_number,
+                    })
+    return results
+
+
+def check_rule_ips_threat_intel(configs: list[Path], output_dir: Path,
+                                threat_db, vendor_override: str | None = None) -> list[dict]:
+    """Check all public IPs in firewall rules against threat-intel blocklists.
+    Returns a list of finding dicts ready to merge into all_findings."""
+    rule_ips = _extract_rule_ips(configs, vendor_override)
+    if not rule_ips:
+        _log("Threat-intel: no public IPs found in firewall rules")
+        return []
+
+    seen: set[tuple[str, str, str]] = set()
+    findings: list[dict] = []
+    ti_evidence_dir = Path(output_dir) / "evidence" / "threat_intel"
+    ti_evidence_dir.mkdir(parents=True, exist_ok=True)
+    all_hits: list[dict] = []
+
+    for entry in rule_ips:
+        ip_str = entry["ip"]
+        base_ip = ip_str.split("/")[0] if "/" in ip_str else ip_str
+        dedup_key = (base_ip, entry["rule_id"], entry["direction"])
+        if dedup_key in seen:
+            continue
+        seen.add(dedup_key)
+
+        hit = threat_db.lookup_ip(base_ip)
+        if not hit:
+            continue
+
+        geo = threat_db.geoip(base_ip)
+        geo_str = f" ({geo.country_name}, {geo.country_code})" if geo else ""
+
+        ev_path = ti_evidence_dir / f"{base_ip.replace(':', '_')}_threat_hit.json"
+        ev_data = {
+            "ip": base_ip, "hit": hit.as_dict(),
+            "geo": geo.as_dict() if geo else None,
+            "rule_id": entry["rule_id"], "rule_name": entry["rule_name"],
+            "direction": entry["direction"], "action": entry["action"],
+            "config_file": entry["config_file"],
+            "raw_lines": entry["raw_lines"],
+            "checked_at": _now_iso(),
+        }
+        ev_path.write_text(json.dumps(ev_data, indent=2, default=str), encoding="utf-8")
+        rel_ev = str(ev_path.relative_to(output_dir))
+
+        all_hits.append(ev_data)
+
+        is_permit = entry["action"] == "permit"
+        is_known = hit.classification == "known_malicious"
+        sources_str = ", ".join(hit.sources)
+        tags_str = ", ".join(hit.tags) if hit.tags else "unclassified"
+
+        if is_known and is_permit:
+            cat_id = "BA-TI-001"
+            risk = "HIGH"
+            title = f"Firewall Rule Permits Traffic to Known Malicious IP ({base_ip})"
+            desc = (
+                f"Firewall rule '{entry['rule_id']}' in {entry['config_file']} "
+                f"permits traffic with {entry['direction']} address {base_ip}{geo_str} "
+                f"which is flagged as KNOWN MALICIOUS by: {sources_str}. "
+                f"Tags: {tags_str}. Confidence: high."
+            )
+            impact = (
+                f"This rule allows network traffic to/from an IP address confirmed "
+                f"as malicious infrastructure (C2 server, botnet node, compromised "
+                f"host, or hijacked network). Active communication with this IP "
+                f"may indicate an ongoing compromise, data exfiltration, or "
+                f"command-and-control activity."
+            )
+            remediation = (
+                f"1. Immediately add a deny rule for {base_ip} above this permit rule. "
+                f"2. Investigate firewall logs for any traffic to/from {base_ip}. "
+                f"3. If traffic occurred, treat as a potential incident — isolate "
+                f"affected hosts and begin forensic analysis. "
+                f"4. Review rule '{entry['rule_id']}' to determine if it can be narrowed."
+            )
+        elif is_known and not is_permit:
+            cat_id = "BA-TI-003"
+            risk = "INFO"
+            title = f"Firewall Rule Blocks Known Malicious IP ({base_ip})"
+            desc = (
+                f"Firewall rule '{entry['rule_id']}' in {entry['config_file']} "
+                f"correctly denies traffic with {entry['direction']} address "
+                f"{base_ip}{geo_str}, which is flagged as KNOWN MALICIOUS by: "
+                f"{sources_str}. Tags: {tags_str}."
+            )
+            impact = (
+                f"Positive observation: the firewall is actively blocking traffic "
+                f"to/from a confirmed malicious IP. This indicates effective "
+                f"threat-intel integration in the firewall policy."
+            )
+            remediation = (
+                f"No action required — the deny rule is correctly blocking {base_ip}. "
+                f"Ensure this rule remains in place and is not overridden by a "
+                f"broader permit rule above it in the policy."
+            )
+        elif not is_known and is_permit:
+            cat_id = "BA-TI-002"
+            risk = "MEDIUM"
+            title = f"Firewall Rule Permits Traffic to Suspected Malicious IP ({base_ip})"
+            desc = (
+                f"Firewall rule '{entry['rule_id']}' in {entry['config_file']} "
+                f"permits traffic with {entry['direction']} address {base_ip}{geo_str} "
+                f"which is flagged as SUSPECTED malicious by: {sources_str}. "
+                f"Tags: {tags_str}. Confidence: moderate — based on honeypot hits, "
+                f"scan activity, or crowdsourced reports."
+            )
+            impact = (
+                f"This rule allows traffic to/from an IP reported as suspicious "
+                f"by multiple threat-intelligence sources. While not confirmed "
+                f"malicious, the IP has been observed in attack activity, scanning, "
+                f"or brute-force attempts. Permitting traffic increases exposure "
+                f"to potential threats."
+            )
+            remediation = (
+                f"1. Review whether traffic to/from {base_ip} is expected and "
+                f"business-justified. 2. Check firewall logs for recent connections. "
+                f"3. If not justified, add a deny rule. 4. If justified, document "
+                f"the business reason and monitor the connection."
+            )
+        else:
+            continue
+
+        fd = {
+            "id": str(uuid.uuid4()),
+            "tool": "bastion",
+            "title": title,
+            "datetime": _now_iso(),
+            "ip": base_ip,
+            "port": 0,
+            "hostname": "",
+            "risk": risk,
+            "command": f"pr0t31n_threat_intel.lookup_ip('{base_ip}')",
+            "description": desc,
+            "output": json.dumps(hit.as_dict(), indent=2),
+            "output_file": rel_ev,
+            "cves": "",
+            "sources": f"bastion-threat-intel ({sources_str})",
+            "service": "",
+            "affected": base_ip,
+            "exploitdb": False,
+            "metasploit": False,
+            "exploit_details": [],
+            "remediation": remediation,
+            "impact": impact,
+            "catalogue_id": cat_id,
+            "phase": "threat_intel",
+            "scope": None,
+        }
+        if geo:
+            fd["_x_country_code"] = geo.country_code
+            fd["_x_country_name"] = geo.country_name
+
+        findings.append(fd)
+        _finding_token(fd)
+
+    report_path = Path(output_dir) / "threat_intel_report.json"
+    report_path.write_text(json.dumps({
+        "checked_at": _now_iso(),
+        "total_rule_ips_checked": len(seen),
+        "total_hits": len(all_hits),
+        "known_malicious_hits": sum(1 for h in all_hits if h["hit"]["classification"] == "known_malicious"),
+        "suspected_hits": sum(1 for h in all_hits if h["hit"]["classification"] == "suspected"),
+        "hits": all_hits,
+    }, indent=2, default=str), encoding="utf-8")
+
+    return findings
+
+
+def build_rule_geo_summary(configs: list[Path], output_dir: Path,
+                           threat_db, vendor_override: str | None = None) -> None:
+    """Build a per-country summary of all public IPs in firewall rules."""
+    rule_ips = _extract_rule_ips(configs, vendor_override)
+    if not rule_ips:
+        return
+
+    countries: dict[str, dict] = {}
+    seen_ips: set[str] = set()
+
+    for entry in rule_ips:
+        ip_str = entry["ip"]
+        base_ip = ip_str.split("/")[0] if "/" in ip_str else ip_str
+        if base_ip in seen_ips:
+            rec_key = base_ip
+        else:
+            seen_ips.add(base_ip)
+            rec_key = base_ip
+
+        geo = threat_db.geoip(base_ip)
+        if not geo:
+            cc = "XX"
+            cn = "Unknown"
+        else:
+            cc = geo.country_code or "XX"
+            cn = geo.country_name or "Unknown"
+
+        if cc not in countries:
+            countries[cc] = {
+                "country_code": cc, "country_name": cn,
+                "permit_ips": set(), "deny_ips": set(),
+                "permit_rules": 0, "deny_rules": 0,
+                "total_rules": 0,
+            }
+        c = countries[cc]
+        c["total_rules"] += 1
+        if entry["action"] == "permit":
+            c["permit_ips"].add(base_ip)
+            c["permit_rules"] += 1
+        else:
+            c["deny_ips"].add(base_ip)
+            c["deny_rules"] += 1
+
+    for c in countries.values():
+        c["permit_ips"] = sorted(c["permit_ips"])
+        c["deny_ips"] = sorted(c["deny_ips"])
+        c["unique_ips"] = len(set(c["permit_ips"]) | set(c["deny_ips"]))
+
+    geo_summary = {
+        "generated_at": _now_iso(),
+        "total_public_ips": len(seen_ips),
+        "total_countries": len(countries),
+        "countries": sorted(countries.values(), key=lambda x: -x["total_rules"]),
+    }
+
+    (Path(output_dir) / "geo_summary.json").write_text(
+        json.dumps(geo_summary, indent=2, default=str), encoding="utf-8")
+
+
 def main() -> int:
     p = argparse.ArgumentParser(
         prog="bastion",
@@ -233,6 +528,8 @@ def main() -> int:
                    help="Emit single-line JSON summary on stdout at end")
     p.add_argument("--emit-tokens", action="store_true",
                    help="Force __VANTAGE_* tokens even when BASTION_MANAGED is unset")
+    p.add_argument("--skip-threat-intel", action="store_true",
+                   help="Skip threat-intelligence and GeoIP checks")
     ns = p.parse_args()
 
     global _MANAGED
@@ -298,6 +595,36 @@ def main() -> int:
             _err(f"audit failed on {cfg.name}: {exc}")
             logging.error("audit failed on %s: %s", cfg.name, exc, exc_info=True)
     ended_at = _now_iso()
+
+    # ── Threat-intel phase ────────────────────────────────────────────
+    if _HAVE_THREAT_INTEL and not ns.skip_threat_intel:
+        try:
+            _status({"phase": "threat_intel", "step": "loading blocklists"})
+            _log("Loading threat intelligence database...")
+            threat_db = _ti.ThreatIntelDB()
+            stats = threat_db.stats()
+            _log(f"Threat-intel loaded: {stats['total_ips']} IPs, "
+                 f"{stats['cidr_ranges']} CIDRs, "
+                 f"{stats['urls']} URLs")
+            if _RUNLOG:
+                _RUNLOG.event(
+                    f"Threat-intel DB loaded: {stats['total_ips']} IPs, "
+                    f"{stats['cidr_ranges']} CIDRs, "
+                    f"GeoIP={stats['geoip_available']}")
+
+            _status({"phase": "threat_intel", "step": "checking rule IPs"})
+            ti_findings = check_rule_ips_threat_intel(
+                configs, out_dir, threat_db, vendor_override=ns.vendor)
+            all_findings.extend(ti_findings)
+            _log(f"Threat-intel: {len(ti_findings)} findings from rule IP checks")
+
+            _status({"phase": "threat_intel", "step": "building GeoIP summary"})
+            build_rule_geo_summary(configs, out_dir, threat_db,
+                                   vendor_override=ns.vendor)
+            _log("GeoIP rule summary written")
+        except Exception as exc:
+            _err(f"Threat-intel phase failed: {exc}")
+            logging.error("threat-intel failed: %s", exc, exc_info=True)
 
     # Universal findings.json (§13e) + summary.json
     if _HAVE_COMPAT:
