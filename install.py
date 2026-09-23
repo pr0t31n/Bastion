@@ -6,6 +6,19 @@ import os
 from pathlib import Path
 
 
+def _pip_installed(pkg_spec):
+    """Return True if a pip package is already importable."""
+    import importlib.util
+    name = pkg_spec.split(">=")[0].split("==")[0].split("[")[0].split("<")[0].strip()
+    _IMPORT_MAP = {
+        "flask-socketio": "flask_socketio", "pyyaml": "yaml",
+        "python-engineio": "engineio", "python-socketio": "socketio",
+        "Pillow": "PIL",
+    }
+    mod = _IMPORT_MAP.get(name, name.replace("-", "_"))
+    return importlib.util.find_spec(mod) is not None
+
+
 def main():
     print("=" * 60)
     print("Bastion v1.0.0 — Installation")
@@ -19,17 +32,31 @@ def main():
 
     # Install requirements
     print("\nInstalling Python dependencies...")
-    try:
-        subprocess.check_call([
-            sys.executable, "-m", "pip",
-            "install", "--break-system-packages",
-            "-r", "requirements.txt",
-            "--quiet",
-        ])
-        print("Dependencies installed OK")
-    except subprocess.CalledProcessError as e:
-        print(f"ERROR: pip install failed: {e}")
-        sys.exit(1)
+    req = Path("requirements.txt")
+    if req.exists():
+        with open(req) as f:
+            pkgs = [ln.strip() for ln in f if ln.strip() and not ln.startswith("#")]
+        _to_install = []
+        for pkg in pkgs:
+            if _pip_installed(pkg):
+                print(f"  ✓ {pkg} already installed")
+            else:
+                _to_install.append(pkg)
+        if _to_install:
+            print(f"  Installing {len(_to_install)} package(s)…")
+            try:
+                subprocess.check_call([
+                    sys.executable, "-m", "pip",
+                    "install", "--break-system-packages", "--quiet",
+                ] + _to_install)
+                print("  Dependencies installed OK")
+            except subprocess.CalledProcessError as e:
+                print(f"ERROR: pip install failed: {e}")
+                sys.exit(1)
+        else:
+            print("  All pip packages already installed.")
+    else:
+        print("  ! requirements.txt not found — skipping pip install")
 
     # Create required directories
     print("\nCreating directory structure...")
