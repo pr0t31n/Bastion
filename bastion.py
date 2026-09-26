@@ -49,7 +49,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-VERSION = "2.2.1"   # 2.2 = threat-intel + GeoIP; 2.x = pure-CLI; 1.x was Flask+SocketIO
+VERSION = Path(__file__).resolve().parent.joinpath("VERSION").read_text().strip()
 
 
 # ── Shared schema helpers ──────────────────────────────────────────────
