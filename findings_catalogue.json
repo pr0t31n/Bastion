@@ -1,0 +1,2636 @@
+{
+  "version": "1.7.0",
+  "tool": "bastion",
+  "generated": "from audit_rules YAML + TI findings",
+  "total": 60,
+  "findings": [
+    {
+      "id": "BA-001",
+      "title": "No Default-Deny Rule at End of Policy",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "No explicit default-deny (implicit permit-all) rule exists at the end of the access control list or policy group. Traffic not matching any rule is permitted rather than dropped.",
+      "impact": "Unintended traffic flows reach internal systems. Attackers can exploit missing coverage to access systems that policy authors assumed were protected.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7(5)"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.20"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Add an explicit 'deny ip any any log' rule as the final entry in every ACL. 2. Ensure the deny-all rule includes logging to capture all traffic hitting the implicit deny. 3. Review all traffic flows to confirm intended rules precede the default deny. 4. Test the rule using traffic simulation before deploying to production.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-001",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-002",
+      "title": "Any-Any-Any Permit Rule Detected",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A firewall rule permits all traffic from any source to any destination on all ports and protocols. This is the most dangerous firewall misconfiguration possible.",
+      "impact": "The firewall provides no access control. All traffic is permitted regardless of source, destination, or protocol.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately remove or disable the any-any permit rule. 2. Implement principle of least privilege \u2014 only permit required traffic flows. 3. Document all required flows before rebuilding the policy. 4. Use a test environment to validate replacement rules before deploying.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-002",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-003",
+      "title": "Disabled Rules Present in Production Configuration",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "LOW",
+      "description": "One or more firewall rules are disabled (inactive) in the production configuration. Disabled rules accumulate over time and indicate configuration drift or incomplete cleanup.",
+      "impact": "Disabled rules represent policy intent that is no longer enforced. They create confusion during audits, may be re-enabled accidentally, and indicate the policy requires cleanup.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 3.7,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.9"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Review all disabled rules and determine if they are still required. 2. Remove disabled rules that are no longer needed. 3. Document the reason for any disabled rules that must be retained. 4. Establish a policy lifecycle process to prevent accumulation of disabled rules.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-004",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-004",
+      "title": "Duplicate Firewall Rules Detected",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "Two or more firewall rules have identical source, destination, port, and action specifications. Duplicate rules indicate policy bloat and maintenance issues.",
+      "impact": "Duplicate rules increase management overhead, create confusion during incident response, and may indicate the policy review process is not working correctly.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 2.6,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:N/I:L/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.9"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Identify and remove all duplicate rules. 2. Implement a rule review process that checks for duplicates before policy deployment. 3. Use firewall management tools that flag duplicate rules automatically.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-005",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-005",
+      "title": "Shadowed Rules \u2014 Unreachable Policy Entries",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "One or more firewall rules are completely covered (shadowed) by earlier, broader rules and will never be evaluated. Shadowed rules indicate policy maintenance issues and potential security gaps.",
+      "impact": "Shadowed rules are never executed. If the shadowing rule has a different action than the shadowed rule, traffic may be handled contrary to policy intent.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 3.7,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.9"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Reorder rules so more specific rules precede broader rules. 2. Remove rules that are completely redundant given preceding rules. 3. Implement rule ordering verification in change management process.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-006",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-006",
+      "title": "Suboptimal Rule Ordering",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "LOW",
+      "description": "Frequently-hit rules appear after less-used rules in the policy list. This degrades performance as the firewall must evaluate all preceding rules before reaching the effective rule.",
+      "impact": "Increased latency for matching traffic. In high-volume environments, suboptimal ordering can degrade firewall throughput.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 3.1,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Place high-volume deny rules (e.g., blocklists) near the top of the policy. 2. Place more specific, lower-volume rules before broad rules. 3. Use hit count data to determine optimal ordering.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-007",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-007",
+      "title": "RDP Permitted from Any Source",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A firewall rule permits Remote Desktop Protocol (RDP, TCP 3389) inbound from any source address. RDP is one of the most commonly exploited services for ransomware and lateral movement.",
+      "impact": "Exposed RDP is a primary attack vector for ransomware gangs, APT groups, and commodity attackers. Authentication bypass vulnerabilities (BlueKeep, DejaBlue) regularly affect RDP.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.20"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately restrict RDP access to specific management IP ranges. 2. Place RDP behind a VPN or RDP Gateway. 3. Enable Network Level Authentication (NLA). 4. Implement account lockout policies. 5. Consider replacing RDP with a zero-trust remote access solution.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-010",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-008",
+      "title": "SSH Permitted from External/Untrusted Sources",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits SSH (TCP 22) from untrusted or external sources. SSH brute-force attacks are extremely common against internet-exposed SSH.",
+      "impact": "Exposed SSH enables brute-force attacks, credential stuffing, and exploitation of SSH vulnerabilities. Compromised SSH access provides immediate shell access to the target system.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.20"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict SSH to management IP addresses only. 2. Implement SSH key-based authentication and disable password authentication. 3. Change SSH to a non-standard port (security by obscurity, not a primary control). 4. Implement fail2ban or equivalent brute-force protection. 5. Consider placing SSH behind a jump host or bastion server.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-011",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-009",
+      "title": "Telnet Permitted Through Firewall",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits Telnet (TCP 23). Telnet transmits all data including credentials in plaintext and has been deprecated for over 25 years.",
+      "impact": "All Telnet communications, including authentication credentials, are transmitted in cleartext and can be intercepted by network eavesdroppers. No confidentiality or integrity protection exists.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-8"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.24"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately block all Telnet traffic. 2. Replace all Telnet-dependent systems with SSH. 3. If Telnet is required for legacy systems, isolate those systems and implement compensating controls. 4. Review device configurations to ensure SSH is enabled on all network equipment.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-012",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-010",
+      "title": "FTP Permitted Through Firewall",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "A firewall rule permits FTP (TCP 20/21). FTP transmits credentials and data in plaintext and supports anonymous authentication by default on many implementations.",
+      "impact": "FTP credentials and file contents are transmitted in cleartext. Anonymous FTP can expose sensitive files. FTP's PORT command can be abused for firewall bypass (FTP bounce attacks).",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-8"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.24"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Replace FTP with SFTP (SSH File Transfer Protocol) or FTPS (FTP over TLS). 2. If FTP must be used, restrict to internal networks only. 3. Disable anonymous FTP. 4. Implement strict file transfer policies.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-013",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-011",
+      "title": "SMB Permitted from External Sources (TCP 445)",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A firewall rule permits SMB (TCP 445) from external/untrusted sources. SMB is the primary protocol used by ransomware (WannaCry, NotPetya, EternalBlue) for lateral movement.",
+      "impact": "Exposed SMB is the most common ransomware infection vector. EternalBlue and related exploits are still widely used in ransomware campaigns. SMB exposure directly enables catastrophic data encryption attacks.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately block TCP 445 from all untrusted sources. 2. Block UDP 137-138 and TCP 139 (NetBIOS) as well. 3. Audit internal SMB to ensure it is restricted to required segments. 4. Implement host-based firewall rules in addition to network firewall. 5. Keep Windows systems patched against EternalBlue.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-014",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-012",
+      "title": "MS-RPC Permitted from External Sources (TCP 135)",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits Microsoft RPC (TCP 135) from external sources. MS-RPC is a critical Windows service used for DCOM, WMI, and many Windows management interfaces.",
+      "impact": "Exposed MS-RPC enables remote exploitation of Windows services via DCOM and WMI. Historically abused by Blaster, Sasser, and modern APT groups for remote code execution.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block TCP 135 from all external sources. 2. Block the entire RPC dynamic port range (TCP 49152-65535) from external sources. 3. Consider blocking RPC internally except between required systems.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-015",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-013",
+      "title": "NetBIOS Permitted Through Firewall",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits NetBIOS (UDP 137-138, TCP 139) traffic. NetBIOS is a legacy Windows protocol that enables reconnaissance, credential theft (LLMNR/NBT-NS poisoning), and lateral movement.",
+      "impact": "NetBIOS enables LLMNR and NBT-NS poisoning attacks, NetBIOS name query reconnaissance, and credential capture via Responder-style attacks. Should never traverse firewall boundaries.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block UDP 137, 138 and TCP 139 at all firewall boundaries. 2. Disable NetBIOS over TCP/IP on Windows hosts where not required. 3. Disable LLMNR and NBT-NS via Group Policy.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-016",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-014",
+      "title": "SNMP Permitted from Any Source",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits SNMP (UDP 161) from any source address. SNMP exposes device configurations, routing tables, and interface statistics to anyone who can reach the port.",
+      "impact": "SNMP v1/v2c use community strings for authentication (effectively cleartext passwords). An attacker with SNMP access can read full device configurations, enumerate network topology, and potentially write configurations if community string permits.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.20"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict SNMP to dedicated monitoring IP addresses only. 2. Upgrade to SNMPv3 with authentication and encryption. 3. Use ACLs on network devices themselves, not just the firewall. 4. Change default community strings (public/private).",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-017",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-015",
+      "title": "SNMP v1/v2c Weak Authentication Exposure",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "SNMP is permitted through the firewall with likely v1/v2c community string authentication. SNMPv1 and v2c use cleartext community strings that can be sniffed.",
+      "impact": "Community strings transmitted in cleartext can be captured and used for unauthorized device access. Many devices ship with default community strings (public/private).",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:L/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-8"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Migrate to SNMPv3 with AuthPriv security level. 2. If SNMP v1/v2c must be used, restrict to isolated management VLAN. 3. Change all community strings from defaults. 4. Implement SNMPv3 privacy (encryption) for sensitive data.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-018",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-016",
+      "title": "WinRM Permitted from External Sources (TCP 5985/5986)",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits Windows Remote Management (WinRM, TCP 5985 HTTP or 5986 HTTPS) from external sources. WinRM provides PowerShell remoting and remote command execution.",
+      "impact": "Exposed WinRM enables remote command execution via PowerShell. Commonly used by attackers for lateral movement and persistence once credentials are compromised.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block TCP 5985 and 5986 from all untrusted sources. 2. Restrict WinRM to management IP ranges only. 3. Require HTTPS (5986) over HTTP (5985). 4. Implement WinRM access control lists.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-019",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-017",
+      "title": "Database Ports Exposed to External Sources",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A firewall rule permits database service ports (MySQL TCP 3306, MSSQL TCP 1433, PostgreSQL TCP 5432, Oracle TCP 1521) from external or untrusted sources.",
+      "impact": "Direct database exposure enables SQL injection amplification, credential brute-force against database authentication, and direct data exfiltration. Databases should never be directly internet-accessible.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately block all database ports from untrusted sources. 2. Place databases in a dedicated database VLAN accessible only from application servers. 3. Implement database activity monitoring (DAM). 4. Use application-layer database proxies where possible.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-020",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-018",
+      "title": "Elasticsearch Exposed to External Sources (TCP 9200/9300)",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A firewall rule permits Elasticsearch (TCP 9200 HTTP API or 9300 transport) from external or untrusted sources. Elasticsearch has no authentication by default.",
+      "impact": "Unauthenticated Elasticsearch instances have led to some of the largest data breaches in history. All indexed data is accessible to anyone who can reach port 9200.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately block TCP 9200 and 9300 from all untrusted sources. 2. Enable Elasticsearch security features (X-Pack/Security). 3. Implement TLS and authentication. 4. Place Elasticsearch behind a reverse proxy with authentication.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-021",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-019",
+      "title": "Redis/Memcached Exposed to External Sources",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A firewall rule permits Redis (TCP 6379) or Memcached (TCP/UDP 11211) from external sources. Both services have no authentication by default.",
+      "impact": "Unauthenticated Redis allows full data access and remote code execution via EVAL command. Memcached exposure enables data theft and the service has been abused for massive DDoS amplification attacks.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately block TCP 6379 and 11211 from untrusted sources. 2. Enable Redis AUTH and bind to localhost or internal addresses only. 3. Disable Memcached UDP to prevent amplification abuse. 4. Place caching services behind application tier \u2014 never expose externally.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-022",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-020",
+      "title": "TFTP Permitted Through Firewall",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits TFTP (UDP 69). TFTP has no authentication mechanism \u2014 any client that can reach the TFTP server can read and write files.",
+      "impact": "TFTP enables unauthenticated file reads and writes. Attackers who can reach TFTP servers can read configuration files, firmware, and write malicious files.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:H/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block UDP 69 at all firewall boundaries. 2. Restrict TFTP to isolated management VLAN if required for network device management. 3. Use SCP or SFTP instead of TFTP for device provisioning.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-023",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-021",
+      "title": "NTP Access Not Restricted to Trusted Sources",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "A firewall rule permits NTP (UDP 123) from any source without restriction. Open NTP servers can be abused for reflection/amplification DDoS attacks.",
+      "impact": "Unrestricted NTP access enables use of the firewall's internal NTP infrastructure as a DDoS amplification source. NTP amplification attacks achieve amplification factors of up to 556x.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.6,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict NTP to specific trusted time sources (external) and internal clients only. 2. Disable NTP monlist and other amplification-capable commands. 3. Rate-limit NTP responses.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-024",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-022",
+      "title": "DNS Outbound Not Restricted to Authorised Resolvers",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "LOW",
+      "description": "Outbound DNS (UDP/TCP 53) is permitted from any internal host to any external destination, allowing direct DNS resolution to arbitrary external servers.",
+      "impact": "Unrestricted outbound DNS enables DNS tunneling for data exfiltration, circumvents DNS-based security controls (sinkholes, RPZ), and allows malware to use any DNS server for C2 communication.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict outbound DNS to authorised internal resolvers only. 2. Block direct outbound DNS from all hosts except designated resolvers. 3. Implement DNS logging and monitoring. 4. Deploy DNS filtering (RPZ, DNS firewall) on authorised resolvers.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-025",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-023",
+      "title": "ICMP Not Restricted",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "INFO",
+      "description": "ICMP is permitted without source or destination restriction. While necessary for network diagnostics, unrestricted ICMP enables network reconnaissance and covert channel communication.",
+      "impact": "ICMP ping sweeps reveal network topology. ICMP tunneling (iodine, icmptunnel) enables covert data exfiltration. ICMP redirect messages can be used for man-in-the-middle attacks.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 3.7,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict inbound ICMP to only needed types (echo-reply, unreachable, time-exceeded). 2. Block ICMP echo from external sources or restrict to monitoring IPs. 3. Consider rate-limiting ICMP.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-026",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-024",
+      "title": "Management Access Not Restricted to Management Zone",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "Firewall management interfaces (HTTPS, SSH, ASDM) are accessible from any source address, including untrusted networks.",
+      "impact": "Unrestricted management access exposes the firewall administrative interface to brute-force attacks, credential stuffing, and exploitation of management interface vulnerabilities.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.31"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict all management access to a dedicated out-of-band management network. 2. Block all management protocol access from non-management networks. 3. Implement management VLAN with strict access controls. 4. Enable failed login lockout on management interfaces.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-030",
+      "_x_check_type": "management_access"
+    },
+    {
+      "id": "BA-025",
+      "title": "HTTP Used for Device Management",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "HTTP (cleartext) is enabled for firewall or device management. All management traffic including credentials is transmitted unencrypted.",
+      "impact": "Credentials, session tokens, and configuration changes transmitted via HTTP can be captured by network eavesdroppers. Session hijacking attacks are trivial against HTTP management sessions.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-8"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.24"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Disable HTTP management on all devices. 2. Enable HTTPS with TLS 1.2 minimum. 3. Install a valid management certificate. 4. Redirect any HTTP management connections to HTTPS.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-031",
+      "_x_check_type": "management_access"
+    },
+    {
+      "id": "BA-026",
+      "title": "Telnet Used for Device Management",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "Telnet is enabled as a device management protocol. Telnet provides no encryption, authentication challenge-response visibility, or integrity protection.",
+      "impact": "All management commands, including configuration changes and credentials, are transmitted in cleartext. An attacker with network access can capture and replay management sessions.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-8"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately disable Telnet on all devices. 2. Enable SSH version 2 as the sole remote management protocol. 3. Configure SSH with strong cipher suites and MAC algorithms. 4. Remove Telnet from all device configurations.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-032",
+      "_x_check_type": "management_access"
+    },
+    {
+      "id": "BA-027",
+      "title": "No Source Restriction on SSH/HTTPS Management Access",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "SSH or HTTPS management access is configured without a source IP restriction, allowing management access from any network.",
+      "impact": "Management access from any source dramatically increases the attack surface for brute-force attacks, credential stuffing, and exploitation of management interface vulnerabilities.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Implement source IP restrictions for all management protocols. 2. Create an explicit management ACL restricting access to management workstation IPs. 3. Use an out-of-band management network where possible.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-033",
+      "_x_check_type": "management_access"
+    },
+    {
+      "id": "BA-028",
+      "title": "HTTPS Management Accessible from Any Source",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "HTTPS device management is accessible from any source IP address. While HTTPS provides encryption, unrestricted access enables credential attacks.",
+      "impact": "Unrestricted HTTPS management enables brute-force and credential stuffing attacks against the management interface. Web-based management interfaces have historically contained exploitable vulnerabilities.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict HTTPS management to specific management IP ranges. 2. Implement account lockout after failed login attempts. 3. Enable multi-factor authentication for management access where supported.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-034",
+      "_x_check_type": "management_access"
+    },
+    {
+      "id": "BA-029",
+      "title": "Permit Rules Without Logging Enabled",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "One or more permit (allow) rules do not have logging enabled. Traffic matching these rules is not captured in firewall logs.",
+      "impact": "Without logging on permit rules, allowed traffic is invisible to security monitoring. Attacks, data exfiltration, and lateral movement that uses permitted paths cannot be detected or investigated.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "AU-2",
+        "AU-12"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.15"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Enable logging on all permit rules. 2. At minimum, enable logging on high-risk rules (any-source, external-to-internal). 3. Forward logs to a centralised SIEM for correlation. 4. Set log level to 'informational' for permit rules to capture connection details.",
+      "remediation_component": "Network",
+      "remediation_category": "Monitoring",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-040",
+      "_x_check_type": "logging"
+    },
+    {
+      "id": "BA-030",
+      "title": "Deny Rules Without Logging Enabled",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "One or more deny rules do not have logging enabled. Blocked connection attempts are not captured in firewall logs.",
+      "impact": "Without logging on deny rules, attack attempts against blocked services are invisible. Security teams cannot detect port scans, reconnaissance, or blocked attack attempts.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 5.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "AU-2"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.15"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Enable logging on all deny rules, particularly the default-deny rule. 2. Use logging levels that capture the necessary detail (source IP, destination, port, protocol). 3. Implement log aggregation and alerting for suspicious deny patterns.",
+      "remediation_component": "Network",
+      "remediation_category": "Monitoring",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-041",
+      "_x_check_type": "logging"
+    },
+    {
+      "id": "BA-031",
+      "title": "No Logging Configured \u2014 Complete Forensic Blind Spot",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "No firewall rules in this configuration have logging enabled. The firewall is operating without any security event logging, creating a complete forensic blind spot.",
+      "impact": "Without any logging, the organisation cannot detect attacks, investigate incidents, demonstrate compliance, or understand traffic patterns. This is a fundamental security control failure.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "AU-2",
+        "AU-12"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.15"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately enable logging on all permit rules. 2. Enable logging on the default-deny rule. 3. Configure syslog forwarding to a SIEM. 4. Define a log retention policy (minimum 90 days online, 1 year archived). 5. Establish a log review process.",
+      "remediation_component": "Network",
+      "remediation_category": "Monitoring",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-042",
+      "_x_check_type": "logging"
+    },
+    {
+      "id": "BA-032",
+      "title": "No DMZ (Demilitarised Zone) Detected",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "No DMZ zone or interface has been identified in the firewall configuration. Public-facing services appear to be placed in the same zone as internal systems.",
+      "impact": "Without a DMZ, compromising a public-facing server (web, email, DNS) provides direct access to internal systems. This eliminates a critical layer of defence-in-depth.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Create a dedicated DMZ zone for all public-facing servers. 2. Configure the DMZ with an intermediate security level. 3. Implement strict policies between DMZ and internal zones. 4. Ensure DMZ servers cannot initiate connections to internal systems.",
+      "remediation_component": "Network",
+      "remediation_category": "Network Architecture",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-050",
+      "_x_check_type": "segmentation"
+    },
+    {
+      "id": "BA-033",
+      "title": "Direct Internet-to-Internal Permit Without DMZ Intermediate",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "Permit rules exist that allow direct traffic from the external/internet zone to internal high-trust zones without passing through a DMZ or intermediate inspection zone.",
+      "impact": "Traffic from the internet reaches internal systems directly. A single exploitation event on an internet-facing system could lead to direct internal network compromise.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Redesign traffic flows to route internet traffic through a DMZ. 2. Place all public-facing services in the DMZ. 3. Implement application-layer inspection between DMZ and internal zones. 4. Require explicit permit rules for DMZ-to-internal traffic.",
+      "remediation_component": "Network",
+      "remediation_category": "Network Architecture",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-051",
+      "_x_check_type": "segmentation"
+    },
+    {
+      "id": "BA-034",
+      "title": "Flat Network \u2014 Only One Zone or Interface Defined",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "The firewall configuration defines only a single zone or network interface. All traffic flows through a single segment with no internal segmentation.",
+      "impact": "A flat network means a single compromised host can communicate with any other host. Lateral movement is trivial and ransomware can spread unimpeded.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Segment the network into functional zones (internal, DMZ, management, guest). 2. Implement firewall policies between each zone pair. 3. Consider microsegmentation for high-value systems. 4. Progressively add zones as part of a phased network redesign.",
+      "remediation_component": "Network",
+      "remediation_category": "Network Architecture",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-052",
+      "_x_check_type": "segmentation"
+    },
+    {
+      "id": "BA-035",
+      "title": "Server-to-Workstation Traffic Unrestricted",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "No rules restrict east-west traffic between server and workstation segments. Servers can initiate connections to workstations and vice versa without inspection.",
+      "impact": "Unrestricted server-to-workstation traffic enables ransomware propagation, lateral movement from compromised servers to workstations, and from workstations to servers.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.9,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Implement east-west segmentation between server and workstation VLANs. 2. Deny all server-initiated connections to workstation networks. 3. Permit only required application ports from workstations to servers. 4. Implement network monitoring to detect anomalous east-west traffic.",
+      "remediation_component": "Network",
+      "remediation_category": "Network Architecture",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-053",
+      "_x_check_type": "segmentation"
+    },
+    {
+      "id": "BA-036",
+      "title": "Internal RFC-1918 Addresses Potentially Reachable Without NAT",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "Permit rules allow traffic to private (RFC-1918) destination addresses from external zones without corresponding NAT translations, potentially exposing internal addressing.",
+      "impact": "If RFC-1918 addresses are routed externally without NAT, internal network topology is exposed. This can enable direct attacks against internal systems or reveal sensitive network design information.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Verify that NAT is configured for all rules permitting external traffic to internal RFC-1918 destinations. 2. Ensure that external routing does not leak RFC-1918 prefixes. 3. Implement NAT for all internal-to-external traffic flows.",
+      "remediation_component": "Network",
+      "remediation_category": "Network Architecture",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-060",
+      "_x_check_type": "nat"
+    },
+    {
+      "id": "BA-037",
+      "title": "1:1 Static NAT Exposes Internal Host Directly to Internet",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "A 1:1 static NAT mapping exposes an internal host directly to the internet with full port translation. All ports on the internal host are potentially reachable.",
+      "impact": "Static NAT 1:1 mappings expose the complete attack surface of the mapped internal host. Any vulnerability on that host is directly exploitable from the internet.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Replace 1:1 static NAT with port-specific NAT where possible. 2. Implement access control lists in combination with static NAT. 3. Only expose specific required ports, not the full host. 4. Move services requiring internet exposure to a DMZ with strict policies.",
+      "remediation_component": "Network",
+      "remediation_category": "Network Architecture",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-061",
+      "_x_check_type": "nat"
+    },
+    {
+      "id": "BA-038",
+      "title": "IPv6 Traffic Not Addressed in Policy",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "The firewall configuration does not include explicit IPv6 policy rules. If IPv6 is enabled on interfaces, traffic may be uncontrolled.",
+      "impact": "Unmanaged IPv6 traffic may bypass IPv4 security controls. Dual-stack hosts may be reachable via IPv6 paths that are not covered by the IPv4 firewall policy.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 4.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Audit all interfaces for IPv6 enablement. 2. If IPv6 is not required, disable it on all interfaces. 3. If IPv6 is used, implement a full dual-stack firewall policy mirroring IPv4 controls. 4. Block IPv6 tunnelling protocols (6to4, Teredo, ISATAP) at the perimeter.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-070",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-039",
+      "title": "GRE/IPSec Tunnels Permitted Without Authentication Requirement",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "GRE (protocol 47) or IPSec (ESP/AH, protocols 50/51) tunnelling is permitted without authentication requirements enforced at the firewall level.",
+      "impact": "Unauthenticated GRE tunnels can be used to encapsulate and hide malicious traffic, bypassing application-layer inspection. GRE provides no confidentiality or integrity.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 4.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-8"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Replace GRE with authenticated IPSec tunnels. 2. Implement IKEv2 with strong authentication for all VPN tunnels. 3. If GRE is required, encapsulate in IPSec. 4. Implement strict source/destination restrictions on tunnel endpoints.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-071",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-040",
+      "title": "BGP/OSPF Routing Protocols Permitted from External Sources",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "BGP (TCP 179) or OSPF routing protocol traffic is permitted from external or untrusted sources. Routing protocol injection can manipulate network traffic paths.",
+      "impact": "Rogue BGP sessions or OSPF updates can redirect traffic to attacker-controlled destinations, enable man-in-the-middle attacks, or cause network-wide outages.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 10.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block BGP (TCP 179) from untrusted sources. 2. Implement BGP authentication (MD5 or TCP-AO). 3. Implement OSPF authentication. 4. Restrict routing protocol traffic to dedicated peering addresses.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-072",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-041",
+      "title": "Outbound SMTP Not Restricted to Mail Relay",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "Outbound SMTP (TCP 25) is permitted from internal networks to any external destination, allowing any internal host to send email directly to external mail servers.",
+      "impact": "Unrestricted outbound SMTP enables malware to send spam, phishing emails, and data exfiltration via email from any compromised internal host. This also contributes to IP reputation damage.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block outbound TCP 25 from all hosts except designated mail relays. 2. Route all outbound SMTP through a controlled mail relay/gateway. 3. Implement outbound email filtering and DMARC/SPF/DKIM. 4. Monitor for anomalous outbound email volumes.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-073",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-042",
+      "title": "TLS/SSL Bypass or Inspection Not Configured",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "Encrypted traffic (HTTPS/TLS) is permitted through the firewall without any indication of SSL/TLS inspection being configured. Malware and data exfiltration commonly use HTTPS to evade detection.",
+      "impact": "Encrypted traffic bypasses all application-layer inspection. Malware C2 communications, data exfiltration, and phishing content cannot be inspected or blocked.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 5.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Implement SSL/TLS inspection where technically and legally feasible. 2. At minimum, block HTTPS to known malicious categories via DNS. 3. Implement certificate pinning bypass detection. 4. Consider decryption zones for high-risk traffic categories.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-074",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-043",
+      "title": "VoIP SIP Permitted Without Restriction",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "SIP (Session Initiation Protocol, UDP/TCP 5060/5061) is permitted from untrusted sources without source restriction. SIP is commonly targeted for toll fraud and eavesdropping.",
+      "impact": "Exposed SIP enables toll fraud (attackers route expensive calls through your infrastructure), eavesdropping on VoIP calls, and SIP scanning for credential harvesting.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 7.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict SIP to SIP trunk provider IP ranges only. 2. Implement SIP-aware firewall inspection. 3. Deploy a Session Border Controller (SBC). 4. Enable SIP authentication and registration rate limiting.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-080",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-044",
+      "title": "Video Conferencing Ports Unrestricted",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "LOW",
+      "description": "Video conferencing service ports (Zoom 8801-8802, Teams 3478-3481, Webex) are permitted from any source without restriction.",
+      "impact": "Unrestricted video conferencing ports can be abused for reconnaissance and may expose internal network information through STUN/TURN protocol interactions.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 3.7,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Restrict video conferencing traffic to known service provider IP ranges. 2. Use cloud-relay services rather than direct peer connections where possible. 3. Implement application-aware firewall policies for video conferencing.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-081",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-045",
+      "title": "MQTT IoT Protocol Exposed (TCP 1883/8883)",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "MQTT broker ports (TCP 1883 unencrypted or 8883 TLS) are accessible from untrusted sources. MQTT is the primary IoT messaging protocol and is frequently misconfigured without authentication.",
+      "impact": "Exposed MQTT brokers allow unauthenticated subscription to all IoT device topics, enabling surveillance, control of IoT devices, and lateral movement into IoT network segments.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Block MQTT ports from all untrusted sources. 2. Enable MQTT authentication and authorisation. 3. Use TLS-only MQTT (8883). 4. Implement MQTT topic-level access control. 5. Place MQTT broker in isolated IoT VLAN.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-082",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-046",
+      "title": "RDP Permitted on Non-Standard Ports",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "Remote Desktop Protocol is permitted on non-standard ports (not 3389), suggesting an attempt to obscure RDP exposure. Security by obscurity does not reduce the actual risk.",
+      "impact": "RDP running on non-standard ports is discovered by modern port scanners within minutes. The underlying RDP vulnerabilities and risks remain identical regardless of port number.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Treat RDP on non-standard ports with the same urgency as standard-port RDP. 2. Implement proper access controls (VPN, specific source IPs) rather than port obfuscation. 3. Consider replacing RDP with a zero-trust remote access solution.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-083",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-047",
+      "title": "Cato WAN Firewall: Any-Any Permit Rule",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "A WAN firewall rule permits all traffic with no source, destination, or service restrictions across SD-WAN sites.",
+      "impact": "Unrestricted site-to-site traffic bypasses intended network segmentation, allowing lateral movement between all connected sites.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.9,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Replace any-any rules with specific site-to-site policies. Define explicit allowed traffic per application and direction.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-200",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-048",
+      "title": "Cato Internet Firewall: Outbound Any-Any Permit",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "Internet-bound traffic is permitted without application or destination restriction, bypassing CASB and URL filtering controls.",
+      "impact": "Users can reach any internet destination on any port, enabling data exfiltration and access to malicious infrastructure.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.2,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Enable Cato CASB and URL Filtering. Define explicit application allow-lists for internet access. Block all non-approved traffic by default.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-201",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-049",
+      "title": "Cato: No Identity-Based Policy \u2014 All Rules Use IP/Network Only",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "All firewall rules use IP addresses or network objects with no user or group identity conditions, missing the zero-trust identity layer.",
+      "impact": "Any device with a matching IP can traverse permitted paths regardless of user identity, reducing the effectiveness of the SASE model.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 4.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "AC-17"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.20"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Migrate rules to identity-based policies using Cato's user/group identity conditions where possible.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-202",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-050",
+      "title": "Cloudflare Gateway: No Default Block on Network Policy",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "No default-deny network policy exists in Cloudflare Gateway. Traffic not matching any explicit rule is passed through.",
+      "impact": "Traffic not matching any explicit rule is permitted by default, allowing access to unclassified destinations and services.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 7.3,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7(5)"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Add a catch-all network policy at the lowest priority that blocks all unmatched traffic.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-210",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-051",
+      "title": "Cloudflare Gateway: DNS Security Policy Not Configured",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "No DNS security policies are present. Malicious domain blocking, DoH restrictions, and DNS-based threat intelligence are disabled.",
+      "impact": "Users can resolve malicious domains, access phishing sites, and malware can use any DNS server for C2 communication.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 5.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SI-3"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Enable Cloudflare Gateway DNS filtering. Add policies to block known malware, phishing, and C2 categories.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-211",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-052",
+      "title": "Cloudflare Gateway: Unrestricted SSH/RDP in Network Policy",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A network policy permits SSH or RDP from any source without identity conditions in Cloudflare Gateway.",
+      "impact": "Any user or device matching the network policy can access SSH/RDP endpoints without additional identity verification, defeating zero-trust principles.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.8,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Add user/group identity conditions to all SSH/RDP rules. Consider migrating to Cloudflare Access for zero-trust remote access.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-212",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-053",
+      "title": "Executive Env: Guest Network Not Isolated from Corporate",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "Guest/visitor wireless or network segment can communicate with corporate resources. Executive environments are high-value targets and guests must have zero access to internal segments.",
+      "impact": "A threat actor, journalist, or corporate spy posing as a visitor could pivot from the guest network to executive communications, email systems, or board-level documents.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.6,
+      "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.22"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Isolate guest VLAN with deny-all to all corporate subnets. 2. Permit only internet-bound traffic from guest segment. 3. Implement client isolation on guest wireless. 4. Log all guest traffic to a SIEM.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-100",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-054",
+      "title": "Executive Env: Personal IoT Devices Reachable from Corporate Network",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "Rules permit traffic to/from IP ranges or ports associated with consumer IoT devices (smart TVs, streaming, home assistants). These devices typically have poor security hygiene and no patch cadence.",
+      "impact": "Nation-state actors routinely compromise executive IoT devices for intelligence gathering. Cross-segment access creates a pivot path to executive communications and data.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:C/C:H/I:M/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Create a dedicated IoT VLAN with no route to corporate. 2. Restrict IoT segment to internet-only with content filtering. 3. Block known IoT management ports (8883, 1883, 8888) from corporate. 4. Implement network access control (NAC) to enforce device placement.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-101",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-055",
+      "title": "Executive Env: AV/Conferencing Ports Exposed Internally Without Restriction",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "Audio/visual and conferencing equipment ports (Crestron, AMX, Extron, Zoom Rooms hardware) are reachable from all internal segments. These devices are rarely patched and frequently have default credentials.",
+      "impact": "AV equipment in executive boardrooms and conference rooms can be compromised via network access, enabling audio/video eavesdropping on confidential meetings.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 5.5,
+      "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:U/C:M/I:M/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "CM-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Place AV equipment on a dedicated AV VLAN. 2. Restrict access to AV management ports to AV management workstations only. 3. Block Crestron (41794/41796), Extron (23/80), AMX (1319) from general users. 4. Enable logging on all rules touching the AV segment.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-102",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-056",
+      "title": "Executive Env: No Zero-Trust Access Control for VPN/Remote Access",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "Remote access to the executive environment relies on traditional VPN without identity-aware, device-posture-based controls. Executive accounts are high-value phishing targets.",
+      "impact": "Compromised VPN credentials grant full network access without posture validation. Executive accounts with VPN access are primary targets for credential theft and phishing campaigns.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 8.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "AC-17"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [
+        "A.8.20"
+      ],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Implement zero-trust network access (ZTNA) for all executive remote connections. 2. Require MFA with phishing-resistant methods (FIDO2/hardware token) for all access. 3. Enforce device posture checks before granting access. 4. Log and alert on all executive remote access sessions.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "long_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-103",
+      "_x_check_type": "rulebase_structure"
+    },
+    {
+      "id": "BA-057",
+      "title": "Executive Env: Logging Disabled on Rules Covering Executive Subnets",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "CRITICAL",
+      "description": "Permit rules covering identified executive subnets have logging disabled, creating a forensic blind spot in the highest-value segment of the network.",
+      "impact": "Without logging on executive network segments, security teams cannot detect or investigate threats targeting the most sensitive users and data in the organisation.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 7.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "AU-2",
+        "AU-12"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "Enable logging on ALL rules that permit traffic to or from executive subnets. Route logs to immutable SIEM storage. Set alerts for anomalous connection patterns.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_fw_rule_id": "FW-104",
+      "_x_check_type": "rule_criteria"
+    },
+    {
+      "id": "BA-058",
+      "title": "Firewall Rule Permits Traffic to Known Malicious IP ({ip})",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "HIGH",
+      "description": "A firewall rule permits traffic with a source or destination address that is flagged as KNOWN MALICIOUS by multiple threat-intelligence sources. The IP is confirmed as malicious infrastructure (C2, botnet node, compromised host, or hijacked network).",
+      "impact": "This rule allows network traffic to/from an IP address confirmed as malicious infrastructure. Active communication with this IP may indicate an ongoing compromise, data exfiltration, or command-and-control activity.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 9.4,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:L",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [
+        {
+          "technique": "T1071",
+          "tactic": "Command and Control",
+          "name": "Application Layer Protocol"
+        }
+      ],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Immediately add a deny rule for the malicious IP above this permit rule. 2. Investigate firewall logs for any traffic to/from the IP. 3. If traffic occurred, treat as a potential incident \u2014 isolate affected hosts and begin forensic analysis. 4. Review the rule to determine if it can be narrowed.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "immediate",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_check_type": "threat_intelligence"
+    },
+    {
+      "id": "BA-059",
+      "title": "Firewall Rule Permits Traffic to Suspected Malicious IP ({ip})",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "MEDIUM",
+      "description": "A firewall rule permits traffic with a source or destination address flagged as SUSPECTED malicious by threat-intelligence sources. The IP has been observed in attack activity, scanning, or brute-force attempts but is not yet confirmed as malicious.",
+      "impact": "This rule allows traffic to/from an IP reported as suspicious by multiple threat-intelligence sources. While not confirmed malicious, the IP has been observed in attack activity, scanning, or brute-force attempts. Permitting traffic increases exposure to potential threats.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 6.5,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:M/I:M/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [
+        {
+          "technique": "T1071",
+          "tactic": "Command and Control",
+          "name": "Application Layer Protocol"
+        }
+      ],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "1. Review whether traffic to/from the IP is expected and business-justified. 2. If not, add a deny rule above the permit. 3. Monitor traffic to/from the IP for anomalous patterns. 4. Subscribe to threat-intel updates for the IP.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "short_term",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_check_type": "threat_intelligence"
+    },
+    {
+      "id": "BA-060",
+      "title": "Firewall Rule Blocks Known Malicious IP ({ip})",
+      "aliases": [],
+      "source_tools": [
+        "bastion"
+      ],
+      "risk": "INFO",
+      "description": "A firewall rule correctly denies traffic with a source or destination address that is flagged as KNOWN MALICIOUS by threat-intelligence sources. The deny rule is actively blocking malicious traffic.",
+      "impact": "Positive observation: the firewall is actively blocking traffic to/from a confirmed malicious IP. This indicates effective threat-intel integration in the firewall policy.",
+      "cwe": [],
+      "cve_examples": [],
+      "cvss_v3_base": 0.0,
+      "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:N",
+      "nessus_plugin_ids": [],
+      "qualys_qids": [],
+      "owasp_web": "",
+      "owasp_api": "",
+      "nist_csf2": [],
+      "nist_800_53": [
+        "SC-7"
+      ],
+      "nist_800_171": [],
+      "pci_dss_4": [],
+      "iso_27001": [],
+      "iso_27002": [],
+      "soc2": [],
+      "hitrust": [],
+      "gdpr": [],
+      "mitre_attack": [],
+      "searchsploit_terms": [],
+      "metasploit_modules": [],
+      "kev": false,
+      "remediation_brief": "No action required \u2014 the deny rule is correctly blocking the malicious IP. Ensure this rule remains in place and is not overridden by a broader permit rule above it in the policy.",
+      "remediation_component": "Network",
+      "remediation_category": "Access Control",
+      "remediation_effort": "",
+      "validation_tools": [
+        "bastion"
+      ],
+      "_x_check_type": "threat_intelligence"
+    }
+  ]
+}
