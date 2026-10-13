@@ -6,8 +6,8 @@ The audit engine (engine/) is untouched — it was already a pure
 ParseResult → list[Finding] function. This wrapper provides:
 
   * argparse interface compatible with Helm dispatch
-  * __VANTAGE_STATUS__/__VANTAGE_FINDING__/__VANTAGE_LOG__/__VANTAGE_ERR__
-    tokens when BASTION_MANAGED=1 (so Helm picks up progress live)
+  * __CRUCIBLE_STATUS__/__CRUCIBLE_FINDING__/__CRUCIBLE_LOG__/__CRUCIBLE_ERR__
+    tokens when CRUCIBLE_MANAGED=1 (so Helm picks up progress live)
   * Universal output: meta.json + findings.json + summary.json per
     CLAUDE.md §13 schema, written under <output_dir>
   * §13c-compliant output_file relative paths via pr0t31n_schema_compat
@@ -101,8 +101,8 @@ from engine.audit_engine import AuditEngine
 # ── Token emission ─────────────────────────────────────────────────────
 
 
-_MANAGED = os.environ.get("BASTION_MANAGED") == "1" or \
-           os.environ.get("VANTAGE_MANAGED") == "1"
+_MANAGED = os.environ.get("CRUCIBLE_MANAGED") == "1" or \
+           os.environ.get("CRUCIBLE_MANAGED") == "1"
 
 
 def _emit(token: str, msg: str) -> None:
@@ -111,19 +111,19 @@ def _emit(token: str, msg: str) -> None:
 
 
 def _log(msg: str) -> None:
-    _emit("__VANTAGE_LOG__:", msg)
+    _emit("__CRUCIBLE_LOG__:", msg)
     if _RUNLOG is not None:
         try: _RUNLOG.info(msg)
         except Exception: pass
 def _err(msg: str) -> None:
-    _emit("__VANTAGE_ERR__:", msg)
+    _emit("__CRUCIBLE_ERR__:", msg)
     if _RUNLOG is not None:
         try: _RUNLOG.error(msg)
         except Exception: pass
 def _status(payload: dict) -> None:
-    _emit("__VANTAGE_STATUS__:", json.dumps(payload, default=str))
+    _emit("__CRUCIBLE_STATUS__:", json.dumps(payload, default=str))
 def _finding_token(finding: dict) -> None:
-    _emit("__VANTAGE_FINDING__:", json.dumps(finding, default=str))
+    _emit("__CRUCIBLE_FINDING__:", json.dumps(finding, default=str))
 
 
 # ── Risk normalisation (Bastion native was TitleCase — schema needs UPPERCASE) ──
@@ -527,7 +527,7 @@ def main() -> int:
     p.add_argument("--json-status", action="store_true",
                    help="Emit single-line JSON summary on stdout at end")
     p.add_argument("--emit-tokens", action="store_true",
-                   help="Force __VANTAGE_* tokens even when BASTION_MANAGED is unset")
+                   help="Force __CRUCIBLE_* tokens even when CRUCIBLE_MANAGED is unset")
     p.add_argument("--skip-threat-intel", action="store_true",
                    help="Skip threat-intelligence and GeoIP checks")
     ns = p.parse_args()
