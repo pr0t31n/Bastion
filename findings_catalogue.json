@@ -84,7 +84,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "1. Immediately remove or disable the any-any permit rule. 2. Implement principle of least privilege — only permit required traffic flows. 3. Document all required flows before rebuilding the policy. 4. Use a test environment to validate replacement rules before deploying.",
+      "remediation_brief": "1. Immediately remove or disable the any-any permit rule. 2. Implement principle of least privilege \u2014 only permit required traffic flows. 3. Document all required flows before rebuilding the policy. 4. Use a test environment to validate replacement rules before deploying.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "immediate",
@@ -182,7 +182,7 @@
     },
     {
       "id": "BA-005",
-      "title": "Firewall: Shadowed Rules — Unreachable Policy Entries",
+      "title": "Firewall: Shadowed Rules \u2014 Unreachable Policy Entries",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -753,7 +753,7 @@
     },
     {
       "id": "BA-018",
-      "title": "Elasticsearch: Elasticsearch Exposed to External Sources (TCP 9200/9300)",
+      "title": "Database: Elasticsearch Exposed to External Sources (TCP 9200/9300)",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -796,7 +796,7 @@
     },
     {
       "id": "BA-019",
-      "title": "Redis: Redis/Memcached Exposed to External Sources",
+      "title": "Database: Redis/Memcached Exposed to External Sources",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -827,7 +827,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "1. Immediately block TCP 6379 and 11211 from untrusted sources. 2. Enable Redis AUTH and bind to localhost or internal addresses only. 3. Disable Memcached UDP to prevent amplification abuse. 4. Place caching services behind application tier — never expose externally.",
+      "remediation_brief": "1. Immediately block TCP 6379 and 11211 from untrusted sources. 2. Enable Redis AUTH and bind to localhost or internal addresses only. 3. Disable Memcached UDP to prevent amplification abuse. 4. Place caching services behind application tier \u2014 never expose externally.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "immediate",
@@ -845,7 +845,7 @@
         "bastion"
       ],
       "risk": "HIGH",
-      "description": "A firewall rule permits TFTP (UDP 69). TFTP has no authentication mechanism — any client that can reach the TFTP server can read and write files.",
+      "description": "A firewall rule permits TFTP (UDP 69). TFTP has no authentication mechanism \u2014 any client that can reach the TFTP server can read and write files.",
       "impact": "TFTP enables unauthenticated file reads and writes. Attackers who can reach TFTP servers can read configuration files, firmware, and write malicious files.",
       "cwe": [],
       "cve_examples": [],
@@ -1321,7 +1321,7 @@
     },
     {
       "id": "BA-031",
-      "title": "Firewall: No Logging Configured — Complete Forensic Blind Spot",
+      "title": "Firewall: No Logging Configured \u2014 Complete Forensic Blind Spot",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1455,7 +1455,7 @@
     },
     {
       "id": "BA-034",
-      "title": "Firewall: Flat Network — Only One Zone or Interface Defined",
+      "title": "Firewall: Flat Network \u2014 Only One Zone or Interface Defined",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2102,7 +2102,7 @@
     },
     {
       "id": "BA-049",
-      "title": "Firewall: Cato: No Identity-Based Policy — All Rules Use IP/Network Only",
+      "title": "Firewall: Cato: No Identity-Based Policy \u2014 All Rules Use IP/Network Only",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2533,7 +2533,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "1. Immediately add a deny rule for the malicious IP above this permit rule. 2. Investigate firewall logs for any traffic to/from the IP. 3. If traffic occurred, treat as a potential incident — isolate affected hosts and begin forensic analysis. 4. Review the rule to determine if it can be narrowed.",
+      "remediation_brief": "1. Immediately add a deny rule for the malicious IP above this permit rule. 2. Investigate firewall logs for any traffic to/from the IP. 3. If traffic occurred, treat as a potential incident \u2014 isolate affected hosts and begin forensic analysis. 4. Review the rule to determine if it can be narrowed.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "immediate",
@@ -2623,7 +2623,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "No action required — the deny rule is correctly blocking the malicious IP. Ensure this rule remains in place and is not overridden by a broader permit rule above it in the policy.",
+      "remediation_brief": "No action required \u2014 the deny rule is correctly blocking the malicious IP. Ensure this rule remains in place and is not overridden by a broader permit rule above it in the policy.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "",
