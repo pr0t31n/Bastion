@@ -6,7 +6,7 @@
   "findings": [
     {
       "id": "BA-001",
-      "title": "No Default-Deny Rule at End of Policy",
+      "title": "Firewall: No Default-Deny Rule at End of Policy",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -51,7 +51,7 @@
     },
     {
       "id": "BA-002",
-      "title": "Any-Any-Any Permit Rule Detected",
+      "title": "Firewall: Any-Any-Any Permit Rule Detected",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -96,7 +96,7 @@
     },
     {
       "id": "BA-003",
-      "title": "Disabled Rules Present in Production Configuration",
+      "title": "Firewall: Disabled Rules Present in Production Configuration",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -139,7 +139,7 @@
     },
     {
       "id": "BA-004",
-      "title": "Duplicate Firewall Rules Detected",
+      "title": "Firewall: Duplicate Firewall Rules Detected",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -182,7 +182,7 @@
     },
     {
       "id": "BA-005",
-      "title": "Shadowed Rules — Unreachable Policy Entries",
+      "title": "Firewall: Shadowed Rules — Unreachable Policy Entries",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -225,7 +225,7 @@
     },
     {
       "id": "BA-006",
-      "title": "Suboptimal Rule Ordering",
+      "title": "Firewall: Suboptimal Rule Ordering",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -266,7 +266,7 @@
     },
     {
       "id": "BA-007",
-      "title": "RDP Permitted from Any Source",
+      "title": "RDP: RDP Permitted from Any Source",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -311,7 +311,7 @@
     },
     {
       "id": "BA-008",
-      "title": "SSH Permitted from External/Untrusted Sources",
+      "title": "Firewall: SSH Permitted from External/Untrusted Sources",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -356,7 +356,7 @@
     },
     {
       "id": "BA-009",
-      "title": "Telnet Permitted Through Firewall",
+      "title": "Insecure Protocol Detected: Telnet Permitted Through Firewall",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -401,7 +401,7 @@
     },
     {
       "id": "BA-010",
-      "title": "FTP Permitted Through Firewall",
+      "title": "FTP: FTP Permitted Through Firewall",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -446,7 +446,7 @@
     },
     {
       "id": "BA-011",
-      "title": "SMB Permitted from External Sources (TCP 445)",
+      "title": "Firewall: SMB Permitted from External Sources (TCP 445)",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -491,7 +491,7 @@
     },
     {
       "id": "BA-012",
-      "title": "MS-RPC Permitted from External Sources (TCP 135)",
+      "title": "RPC: MS-RPC Permitted from External Sources (TCP 135)",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -534,7 +534,7 @@
     },
     {
       "id": "BA-013",
-      "title": "NetBIOS Permitted Through Firewall",
+      "title": "Firewall: NetBIOS Permitted Through Firewall",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -577,7 +577,7 @@
     },
     {
       "id": "BA-014",
-      "title": "SNMP Permitted from Any Source",
+      "title": "SNMP: SNMP Permitted from Any Source",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -622,7 +622,7 @@
     },
     {
       "id": "BA-015",
-      "title": "SNMP v1/v2c Weak Authentication Exposure",
+      "title": "Authentication: SNMP v1/v2c Weak Authentication Exposure",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -665,7 +665,7 @@
     },
     {
       "id": "BA-016",
-      "title": "WinRM Permitted from External Sources (TCP 5985/5986)",
+      "title": "Firewall: WinRM Permitted from External Sources (TCP 5985/5986)",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -708,7 +708,7 @@
     },
     {
       "id": "BA-017",
-      "title": "Database Ports Exposed to External Sources",
+      "title": "Database: Database Ports Exposed to External Sources",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -753,7 +753,7 @@
     },
     {
       "id": "BA-018",
-      "title": "Elasticsearch Exposed to External Sources (TCP 9200/9300)",
+      "title": "Elasticsearch: Elasticsearch Exposed to External Sources (TCP 9200/9300)",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -796,7 +796,7 @@
     },
     {
       "id": "BA-019",
-      "title": "Redis/Memcached Exposed to External Sources",
+      "title": "Redis: Redis/Memcached Exposed to External Sources",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -839,7 +839,7 @@
     },
     {
       "id": "BA-020",
-      "title": "TFTP Permitted Through Firewall",
+      "title": "Firewall: TFTP Permitted Through Firewall",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -882,7 +882,7 @@
     },
     {
       "id": "BA-021",
-      "title": "NTP Access Not Restricted to Trusted Sources",
+      "title": "NTP: NTP Access Not Restricted to Trusted Sources",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -925,7 +925,7 @@
     },
     {
       "id": "BA-022",
-      "title": "DNS Outbound Not Restricted to Authorised Resolvers",
+      "title": "Firewall: DNS Outbound Not Restricted to Authorised Resolvers",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -968,7 +968,7 @@
     },
     {
       "id": "BA-023",
-      "title": "ICMP Not Restricted",
+      "title": "Firewall: ICMP Not Restricted",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1011,7 +1011,7 @@
     },
     {
       "id": "BA-024",
-      "title": "Management Access Not Restricted to Management Zone",
+      "title": "Wireless Management: Management Access Not Restricted to Management Zone",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1056,7 +1056,7 @@
     },
     {
       "id": "BA-025",
-      "title": "HTTP Used for Device Management",
+      "title": "Wireless Management: HTTP Used for Device Management",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1101,7 +1101,7 @@
     },
     {
       "id": "BA-026",
-      "title": "Telnet Used for Device Management",
+      "title": "Insecure Protocol Detected: Telnet Used for Device Management",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1144,7 +1144,7 @@
     },
     {
       "id": "BA-027",
-      "title": "No Source Restriction on SSH/HTTPS Management Access",
+      "title": "Wireless Management: No Source Restriction on SSH/HTTPS Management Access",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1187,7 +1187,7 @@
     },
     {
       "id": "BA-028",
-      "title": "HTTPS Management Accessible from Any Source",
+      "title": "Wireless Management: HTTPS Management Accessible from Any Source",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1230,7 +1230,7 @@
     },
     {
       "id": "BA-029",
-      "title": "Permit Rules Without Logging Enabled",
+      "title": "Firewall: Permit Rules Without Logging Enabled",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1276,7 +1276,7 @@
     },
     {
       "id": "BA-030",
-      "title": "Deny Rules Without Logging Enabled",
+      "title": "Firewall: Deny Rules Without Logging Enabled",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1321,7 +1321,7 @@
     },
     {
       "id": "BA-031",
-      "title": "No Logging Configured — Complete Forensic Blind Spot",
+      "title": "Firewall: No Logging Configured — Complete Forensic Blind Spot",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1367,7 +1367,7 @@
     },
     {
       "id": "BA-032",
-      "title": "No DMZ (Demilitarised Zone) Detected",
+      "title": "Firewall: No DMZ (Demilitarised Zone) Detected",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1412,7 +1412,7 @@
     },
     {
       "id": "BA-033",
-      "title": "Direct Internet-to-Internal Permit Without DMZ Intermediate",
+      "title": "Firewall: Direct Internet-to-Internal Permit Without DMZ Intermediate",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1455,7 +1455,7 @@
     },
     {
       "id": "BA-034",
-      "title": "Flat Network — Only One Zone or Interface Defined",
+      "title": "Firewall: Flat Network — Only One Zone or Interface Defined",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1500,7 +1500,7 @@
     },
     {
       "id": "BA-035",
-      "title": "Server-to-Workstation Traffic Unrestricted",
+      "title": "Firewall: Server-to-Workstation Traffic Unrestricted",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1543,7 +1543,7 @@
     },
     {
       "id": "BA-036",
-      "title": "Internal RFC-1918 Addresses Potentially Reachable Without NAT",
+      "title": "Firewall: Internal RFC-1918 Addresses Potentially Reachable Without NAT",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1627,7 +1627,7 @@
     },
     {
       "id": "BA-038",
-      "title": "IPv6 Traffic Not Addressed in Policy",
+      "title": "Firewall: IPv6 Traffic Not Addressed in Policy",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1670,7 +1670,7 @@
     },
     {
       "id": "BA-039",
-      "title": "GRE/IPSec Tunnels Permitted Without Authentication Requirement",
+      "title": "Authentication Bypass: GRE/IPSec Tunnels Permitted Without Authentication Requirement",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1713,7 +1713,7 @@
     },
     {
       "id": "BA-040",
-      "title": "BGP/OSPF Routing Protocols Permitted from External Sources",
+      "title": "Firewall: BGP/OSPF Routing Protocols Permitted from External Sources",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1756,7 +1756,7 @@
     },
     {
       "id": "BA-041",
-      "title": "Outbound SMTP Not Restricted to Mail Relay",
+      "title": "Firewall: Outbound SMTP Not Restricted to Mail Relay",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1799,7 +1799,7 @@
     },
     {
       "id": "BA-042",
-      "title": "TLS/SSL Bypass or Inspection Not Configured",
+      "title": "Authentication Bypass: TLS/SSL Bypass or Inspection Not Configured",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1842,7 +1842,7 @@
     },
     {
       "id": "BA-043",
-      "title": "VoIP SIP Permitted Without Restriction",
+      "title": "Firewall: VoIP SIP Permitted Without Restriction",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1885,7 +1885,7 @@
     },
     {
       "id": "BA-044",
-      "title": "Video Conferencing Ports Unrestricted",
+      "title": "Firewall: Video Conferencing Ports Unrestricted",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1928,7 +1928,7 @@
     },
     {
       "id": "BA-045",
-      "title": "MQTT IoT Protocol Exposed (TCP 1883/8883)",
+      "title": "IoT Protocol: MQTT IoT Protocol Exposed (TCP 1883/8883)",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1971,7 +1971,7 @@
     },
     {
       "id": "BA-046",
-      "title": "RDP Permitted on Non-Standard Ports",
+      "title": "Network Misconfiguration: RDP Permitted on Non-Standard Ports",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2014,7 +2014,7 @@
     },
     {
       "id": "BA-047",
-      "title": "Cato WAN Firewall: Any-Any Permit Rule",
+      "title": "Firewall: Cato WAN Firewall: Any-Any Permit Rule",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2059,7 +2059,7 @@
     },
     {
       "id": "BA-048",
-      "title": "Cato Internet Firewall: Outbound Any-Any Permit",
+      "title": "Firewall: Cato Internet Firewall: Outbound Any-Any Permit",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2102,7 +2102,7 @@
     },
     {
       "id": "BA-049",
-      "title": "Cato: No Identity-Based Policy — All Rules Use IP/Network Only",
+      "title": "Firewall: Cato: No Identity-Based Policy — All Rules Use IP/Network Only",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2147,7 +2147,7 @@
     },
     {
       "id": "BA-050",
-      "title": "Cloudflare Gateway: No Default Block on Network Policy",
+      "title": "Firewall: Cloudflare Gateway: No Default Block on Network Policy",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2190,7 +2190,7 @@
     },
     {
       "id": "BA-051",
-      "title": "Cloudflare Gateway: DNS Security Policy Not Configured",
+      "title": "Firewall: Cloudflare Gateway: DNS Security Policy Not Configured",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2233,7 +2233,7 @@
     },
     {
       "id": "BA-052",
-      "title": "Cloudflare Gateway: Unrestricted SSH/RDP in Network Policy",
+      "title": "Firewall: Cloudflare Gateway: Unrestricted SSH/RDP in Network Policy",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2276,7 +2276,7 @@
     },
     {
       "id": "BA-053",
-      "title": "Executive Env: Guest Network Not Isolated from Corporate",
+      "title": "Firewall: Executive Env: Guest Network Not Isolated from Corporate",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2321,7 +2321,7 @@
     },
     {
       "id": "BA-054",
-      "title": "Executive Env: Personal IoT Devices Reachable from Corporate Network",
+      "title": "Firewall: Executive Env: Personal IoT Devices Reachable from Corporate Network",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2364,7 +2364,7 @@
     },
     {
       "id": "BA-055",
-      "title": "Executive Env: AV/Conferencing Ports Exposed Internally Without Restriction",
+      "title": "Firewall: Executive Env: AV/Conferencing Ports Exposed Internally Without Restriction",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2407,7 +2407,7 @@
     },
     {
       "id": "BA-056",
-      "title": "Executive Env: No Zero-Trust Access Control for VPN/Remote Access",
+      "title": "Broken Access Control: Executive Env: No Zero-Trust Access Control for VPN/Remote Access",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2452,7 +2452,7 @@
     },
     {
       "id": "BA-057",
-      "title": "Executive Env: Logging Disabled on Rules Covering Executive Subnets",
+      "title": "Firewall: Executive Env: Logging Disabled on Rules Covering Executive Subnets",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2496,7 +2496,7 @@
     },
     {
       "id": "BA-058",
-      "title": "Firewall Rule Permits Traffic to Known Malicious IP ({ip})",
+      "title": "Firewall: Firewall Rule Permits Traffic to Known Malicious IP ({ip})",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2544,7 +2544,7 @@
     },
     {
       "id": "BA-059",
-      "title": "Firewall Rule Permits Traffic to Suspected Malicious IP ({ip})",
+      "title": "Firewall: Firewall Rule Permits Traffic to Suspected Malicious IP ({ip})",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2592,7 +2592,7 @@
     },
     {
       "id": "BA-060",
-      "title": "Firewall Rule Blocks Known Malicious IP ({ip})",
+      "title": "Firewall: Firewall Rule Blocks Known Malicious IP ({ip})",
       "aliases": [],
       "source_tools": [
         "bastion"
