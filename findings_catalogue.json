@@ -1928,7 +1928,7 @@
     },
     {
       "id": "BA-045",
-      "title": "IoT Protocol: MQTT IoT Protocol Exposed (TCP 1883/8883)",
+      "title": "IoT: MQTT IoT Protocol Exposed (TCP 1883/8883)",
       "aliases": [],
       "source_tools": [
         "bastion"
