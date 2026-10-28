@@ -135,8 +135,29 @@ def _status(payload: dict) -> None:
     _emit("__CRUCIBLE_STATUS__:", json.dumps(payload, default=str))
 
 
+_LIVE_FINDINGS: list[dict] = []
+_FINDINGS_DIR: Path | None = None
+
+
 def _finding_token(finding: dict) -> None:
-    _emit("__CRUCIBLE_FINDING__:", json.dumps(finding, default=str))
+    _LIVE_FINDINGS.append(finding)
+    if _MANAGED:
+        print(f"__CRUCIBLE_FINDING__:{json.dumps(finding, default=str)}", flush=True)
+    _flush_findings()
+
+
+def _flush_findings() -> None:
+    if _FINDINGS_DIR is None:
+        return
+    try:
+        if _us is not None:
+            _us.atomic_write_json(_FINDINGS_DIR / "findings.json", _LIVE_FINDINGS)
+        else:
+            (_FINDINGS_DIR / "findings.json").write_text(
+                json.dumps(_LIVE_FINDINGS, indent=2, default=str),
+                encoding="utf-8")
+    except Exception:
+        pass
 
 
 # ── Risk normalisation (Bastion native was TitleCase — schema needs UPPERCASE) ──
@@ -593,6 +614,9 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s [bastion-cli] %(message)s")
+
+    global _FINDINGS_DIR
+    _FINDINGS_DIR = out_dir
 
     # §13b: scan.log + scan.log.json + errors.log + errors.log.json in the run dir
     global _RUNLOG
