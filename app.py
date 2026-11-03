@@ -5,9 +5,9 @@ Replaces the prior Flask+SocketIO app.py with a pure-CLI orchestrator.
 The audit engine (engine/) is untouched — it was already a pure
 ParseResult → list[Finding] function. This wrapper provides:
 
-  * argparse interface compatible with Helm dispatch
+  * argparse interface compatible with Crucible/Nexus dispatch
   * __CRUCIBLE_STATUS__/__CRUCIBLE_FINDING__/__CRUCIBLE_LOG__/__CRUCIBLE_ERR__
-    tokens when CRUCIBLE_MANAGED=1 (so Helm picks up progress live)
+    tokens when CRUCIBLE_MANAGED=1 (so Crucible picks up progress live)
   * Universal output: meta.json + findings.json + summary.json per
     CLAUDE.md §13 schema, written under <output_dir>
   * §13c-compliant output_file relative paths via pr0t31n_schema_compat
@@ -20,12 +20,12 @@ ParseResult → list[Finding] function. This wrapper provides:
   * GeoIP country mapping for IPs referenced in firewall rules
 
 Architectural notes for the 2026-06-11 review:
-  * Helm now dispatches Bastion via adapters/bastion.py.
-  * Arbiter (post-narrowing) tracks Bastion findings via the universal
+  * Crucible/Nexus dispatches Bastion via adapters/bastion.py.
+  * Crucible tracks Bastion findings via the universal
     findings.json — no per-tool HTTP hooks needed; the file IS the API.
-  * No Flask, no SocketIO, no _auth — Helm provides all of those.
+  * No Flask, no SocketIO, no _auth — Crucible/Nexus provides all of those.
 
-Backwards-compatibility hooks preserved for Helm + Arbiter:
+Backwards-compatibility hooks:
   * --json-status                emit single-line JSON status to stdout
   * --emit-tokens                force token emission even when not managed
   * --config-dir / --output-dir  same naming as prior app.py paths
