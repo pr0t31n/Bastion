@@ -25,7 +25,11 @@ spec_staging/
 
 # Secrets
 auth.json
+.auth.json
 .env
+
+# Backups
+*.bak*
 
 # OS
 .DS_Store
