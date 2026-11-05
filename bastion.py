@@ -92,6 +92,18 @@ except ImportError:
 # Set in main() once the run directory is known; _log/_err forward to it.
 _RUNLOG = None
 
+_fdb = None
+_db_path = os.environ.get("PR0T31N_FINDINGS_DB")
+if _db_path:
+    try:
+        import pr0t31n_findings_db
+        _fdb = pr0t31n_findings_db.FindingsDB(_db_path)
+    except Exception:
+        _fdb = None
+
+_OUT_DIR: Path | None = None
+_findings_buf: list = []
+
 
 # Engine (pure-Python, untouched from Flask era)
 from engine.parsers.base import detect_vendor, get_parser
@@ -124,6 +136,26 @@ def _status(payload: dict) -> None:
     _emit("__CRUCIBLE_STATUS__:", json.dumps(payload, default=str))
 def _finding_token(finding: dict) -> None:
     _emit("__CRUCIBLE_FINDING__:", json.dumps(finding, default=str))
+
+
+def _flush_findings_json() -> None:
+    if _OUT_DIR is None:
+        return
+    try:
+        if _HAVE_COMPAT:
+            _sc.write_universal_findings(_OUT_DIR, list(_findings_buf),
+                                          tool="bastion", version=VERSION)
+        elif _HAVE_SCHEMA:
+            for f in _findings_buf:
+                f["risk"] = _canon_risk(f.get("risk"))
+            _us.write_universal_findings(_OUT_DIR, list(_findings_buf),
+                                          tool="bastion", scope=None, phase="audit")
+        else:
+            (_OUT_DIR / "findings.json").write_text(
+                json.dumps(list(_findings_buf), indent=2, default=str),
+                encoding="utf-8")
+    except Exception:
+        pass
 
 
 # ── Risk normalisation (Bastion native was TitleCase — schema needs UPPERCASE) ──
@@ -225,6 +257,13 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
         if not fd.get("tool"): fd["tool"] = "bastion"
         out.append(fd)
         _finding_token(fd)
+        if _fdb:
+            try:
+                _fdb.insert_finding(fd)
+            except Exception:
+                pass
+        _findings_buf.append(fd)
+        _flush_findings_json()
     return out
 
 
@@ -542,6 +581,8 @@ def main() -> int:
 
     out_dir = Path(ns.output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
+    global _OUT_DIR
+    _OUT_DIR = out_dir
     logging.basicConfig(level=logging.INFO,
                         format="%(asctime)s %(levelname)s [bastion-cli] %(message)s")
 
