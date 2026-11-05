@@ -51,6 +51,9 @@ Bastion is a web-based platform for auditing firewall configurations from 12+ ve
 
 ---
 
+
+> **[View full documentation on the Codex Wiki](https://wiki.pr0t31n.com/tools/bastion)** — detailed features, CLI reference, findings catalogue, and integration guides.
+
 ## Features
 
 - **12+ vendor parsers** — Cisco ASA, Cisco IOS, Cisco FTD, Palo Alto, FortiGate, Check Point, SonicWall, WatchGuard, Sophos XG, Juniper SRX, Cato Networks, Cloudflare Gateway, Sangfor
