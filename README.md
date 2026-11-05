@@ -82,7 +82,7 @@ Supported platforms: macOS, Linux, Windows
 ## Installation
 
 ```bash
-cd /Users/pr0t31n/Bastion
+cd /opt/pr0t31n/Bastion
 python3 install.py
 ```
 
@@ -133,7 +133,7 @@ Bastion auto-detects the vendor from the file content. If detection fails, use t
 
 ### 3. Analyse
 
-Click **▶ Analyse All**. Progress is shown in real time as each config is parsed, the audit engine runs, and the architecture diagram is generated.
+Click **Analyse All**. Progress is shown in real time as each config is parsed, the audit engine runs, and the architecture diagram is generated.
 
 ### 4. Review findings
 
@@ -151,7 +151,7 @@ Use the search box and dropdown filters to narrow results by risk level or frame
 
 ### 5. Export a report
 
-Go to the **Summary** tab and click **↓ HTML Report** to download a self-contained audit report suitable for client delivery.
+Go to the **Summary** tab and click **HTML Report** to download a self-contained audit report suitable for client delivery.
 
 ---
 
@@ -190,17 +190,17 @@ Go to the **Summary** tab and click **↓ HTML Report** to download a self-conta
 
 ## Audit Rule Sets
 
-### Base Rules (FW-001 – FW-083) — NIST 800-41 / NIST SP 800-53 / ISO 27001
+### Base Rules (FW-001 -- FW-083) — NIST 800-41 / NIST SP 800-53 / ISO 27001
 
 Covers: default-deny policy, logging, zone segmentation, management access controls, overly permissive rules (any/any), unused rules, rule ordering, NAT configuration, inbound/outbound filtering, protocol hygiene, and more.
 
-### Executive Profile (FW-100 – FW-104)
+### Executive Profile (FW-100 -- FW-104)
 
 Enabled when **Executive Environment** is checked at project creation. Applies stricter thresholds appropriate for protecting high-value targets such as executive offices, C-suite workstations, and board meeting networks.
 
 ### Cloud Overlays
 
-- **Cato Networks (FW-200 – FW-212)** — SASE-specific controls: internet access policies, zero-trust socket rules, cloud application controls
+- **Cato Networks (FW-200 -- FW-212)** — SASE-specific controls: internet access policies, zero-trust socket rules, cloud application controls
 - **Cloudflare Gateway (FW-210+)** — DNS filtering, HTTP inspection, egress policies
 
 ---
@@ -218,7 +218,7 @@ In the **Source** tab, click the filename of any uploaded config to open the bui
 
 ## Change Tracking
 
-When you click **↺ Re-analyse** on a project that has already been analysed, Bastion archives the previous `findings.json` with a timestamp, then runs a fresh analysis and computes:
+When you click **Re-analyse** on a project that has already been analysed, Bastion archives the previous `findings.json` with a timestamp, then runs a fresh analysis and computes:
 
 - **New** findings (appeared in this run, not in the previous)
 - **Resolved** findings (were in the previous run, gone now)
@@ -243,9 +243,9 @@ A diff banner appears at the top of the Findings tab summarising the changes. Ne
 
 | Export | Description |
 |--------|-------------|
-| **↓ HTML Report** | Self-contained HTML file with embedded diagram, all findings, and remediation guidance |
-| **↓ findings.json** | Raw findings data as JSON |
-| **↓ Project ZIP** | Complete project directory including configs, findings, logs, and diagram |
+| **HTML Report** | Self-contained HTML file with embedded diagram, all findings, and remediation guidance |
+| **findings.json** | Raw findings data as JSON |
+| **Project ZIP** | Complete project directory including configs, findings, logs, and diagram |
 
 ---
 
@@ -315,13 +315,51 @@ Bastion/
     └── change_password.html
 ```
 
-> **Note:** Bastion 2.x is a pure-CLI orchestrator (`bastion.py`); the 1.x Flask
+> **Note:** Bastion 2.x is a pure-CLI orchestrator (`app.py`); the 1.x Flask
 > app/templates are archived. The layout above reflects the engine, which is
 > unchanged.
 
+## CLI Reference
+
+```bash
+python3 app.py --output-dir <run_dir> [options]
+```
+
+One of `--config` or `--config-dir` is required.
+
+| Flag | Required | Default | Description |
+|------|----------|---------|-------------|
+| `--config <file>` | One of `--config` / `--config-dir` | -- | Single config file to audit |
+| `--config-dir <dir>` | One of `--config` / `--config-dir` | -- | Directory containing config files |
+| `--output-dir <dir>` | Yes | -- | Universal-output run directory |
+| `--vendor <name>` | No | Auto-detect | Override auto-detected vendor (`cisco_asa`, `cisco_ios`, `cisco_ftd`, `palo_alto`, `fortinet`, `checkpoint`, `sonicwall`, `watchguard`, `sophos`, `juniper_srx`, `cato`, `cloudflare`, `sangfor`) |
+| `--client-short <slug>` | No | `bastion-cli` | Client short name used in output paths and `meta.json` |
+| `--client-name <name>` | No | `Bastion CLI run` | Client display name written to `meta.json` |
+| `--json-status` | No | Off | Emit a single-line JSON summary on stdout when the run completes |
+| `--emit-tokens` | No | Off | Force `__CRUCIBLE_*` protocol tokens even when `CRUCIBLE_MANAGED` is not set (used for Crucible integration testing) |
+| `--skip-threat-intel` | No | Off | Skip threat-intelligence and GeoIP enrichment checks |
+
+**Examples:**
+
+```bash
+# Audit a single config file
+python3 app.py --config firewall.cfg --output-dir /clients/acme/2026/bastion/acme_20261105_120000
+
+# Audit all configs in a directory with vendor override
+python3 app.py --config-dir ./configs/ --vendor palo_alto --output-dir ./run_output
+
+# CLI run with Crucible token emission and JSON status
+python3 app.py --config router.conf --output-dir ./out --emit-tokens --json-status
+
+# Skip threat-intel for air-gapped environments
+python3 app.py --config-dir ./fw_exports/ --output-dir ./out --skip-threat-intel
+```
+
+---
+
 ## Run Output (universal §13)
 
-Each `bastion.py --output-dir <run_dir>` run writes a universal run directory:
+Each `app.py --output-dir <run_dir>` run writes a universal run directory:
 
 ```
 <run_dir>/
