@@ -84,7 +84,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "1. Immediately remove or disable the any-any permit rule. 2. Implement principle of least privilege \u2014 only permit required traffic flows. 3. Document all required flows before rebuilding the policy. 4. Use a test environment to validate replacement rules before deploying.",
+      "remediation_brief": "1. Immediately remove or disable the any-any permit rule. 2. Implement principle of least privilege — only permit required traffic flows. 3. Document all required flows before rebuilding the policy. 4. Use a test environment to validate replacement rules before deploying.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "immediate",
@@ -182,7 +182,7 @@
     },
     {
       "id": "BA-005",
-      "title": "Firewall: Shadowed Rules \u2014 Unreachable Policy Entries",
+      "title": "Firewall: Shadowed Rules — Unreachable Policy Entries",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -827,7 +827,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "1. Immediately block TCP 6379 and 11211 from untrusted sources. 2. Enable Redis AUTH and bind to localhost or internal addresses only. 3. Disable Memcached UDP to prevent amplification abuse. 4. Place caching services behind application tier \u2014 never expose externally.",
+      "remediation_brief": "1. Immediately block TCP 6379 and 11211 from untrusted sources. 2. Enable Redis AUTH and bind to localhost or internal addresses only. 3. Disable Memcached UDP to prevent amplification abuse. 4. Place caching services behind application tier — never expose externally.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "immediate",
@@ -845,7 +845,7 @@
         "bastion"
       ],
       "risk": "HIGH",
-      "description": "A firewall rule permits TFTP (UDP 69). TFTP has no authentication mechanism \u2014 any client that can reach the TFTP server can read and write files.",
+      "description": "A firewall rule permits TFTP (UDP 69). TFTP has no authentication mechanism — any client that can reach the TFTP server can read and write files.",
       "impact": "TFTP enables unauthenticated file reads and writes. Attackers who can reach TFTP servers can read configuration files, firmware, and write malicious files.",
       "cwe": [],
       "cve_examples": [],
@@ -1266,7 +1266,7 @@
       "kev": false,
       "remediation_brief": "1. Enable logging on all permit rules. 2. At minimum, enable logging on high-risk rules (any-source, external-to-internal). 3. Forward logs to a centralised SIEM for correlation. 4. Set log level to 'informational' for permit rules to capture connection details.",
       "remediation_component": "Network",
-      "remediation_category": "Monitoring",
+      "remediation_category": "Logging and Monitoring",
       "remediation_effort": "short_term",
       "validation_tools": [
         "bastion"
@@ -1311,7 +1311,7 @@
       "kev": false,
       "remediation_brief": "1. Enable logging on all deny rules, particularly the default-deny rule. 2. Use logging levels that capture the necessary detail (source IP, destination, port, protocol). 3. Implement log aggregation and alerting for suspicious deny patterns.",
       "remediation_component": "Network",
-      "remediation_category": "Monitoring",
+      "remediation_category": "Logging and Monitoring",
       "remediation_effort": "short_term",
       "validation_tools": [
         "bastion"
@@ -1321,7 +1321,7 @@
     },
     {
       "id": "BA-031",
-      "title": "Firewall: No Logging Configured \u2014 Complete Forensic Blind Spot",
+      "title": "Firewall: No Logging Configured — Complete Forensic Blind Spot",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1357,7 +1357,7 @@
       "kev": false,
       "remediation_brief": "1. Immediately enable logging on all permit rules. 2. Enable logging on the default-deny rule. 3. Configure syslog forwarding to a SIEM. 4. Define a log retention policy (minimum 90 days online, 1 year archived). 5. Establish a log review process.",
       "remediation_component": "Network",
-      "remediation_category": "Monitoring",
+      "remediation_category": "Logging and Monitoring",
       "remediation_effort": "immediate",
       "validation_tools": [
         "bastion"
@@ -1402,7 +1402,7 @@
       "kev": false,
       "remediation_brief": "1. Create a dedicated DMZ zone for all public-facing servers. 2. Configure the DMZ with an intermediate security level. 3. Implement strict policies between DMZ and internal zones. 4. Ensure DMZ servers cannot initiate connections to internal systems.",
       "remediation_component": "Network",
-      "remediation_category": "Network Architecture",
+      "remediation_category": "Network Security",
       "remediation_effort": "long_term",
       "validation_tools": [
         "bastion"
@@ -1445,7 +1445,7 @@
       "kev": false,
       "remediation_brief": "1. Redesign traffic flows to route internet traffic through a DMZ. 2. Place all public-facing services in the DMZ. 3. Implement application-layer inspection between DMZ and internal zones. 4. Require explicit permit rules for DMZ-to-internal traffic.",
       "remediation_component": "Network",
-      "remediation_category": "Network Architecture",
+      "remediation_category": "Network Security",
       "remediation_effort": "long_term",
       "validation_tools": [
         "bastion"
@@ -1455,7 +1455,7 @@
     },
     {
       "id": "BA-034",
-      "title": "Firewall: Flat Network \u2014 Only One Zone or Interface Defined",
+      "title": "Firewall: Flat Network — Only One Zone or Interface Defined",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -1490,7 +1490,7 @@
       "kev": false,
       "remediation_brief": "1. Segment the network into functional zones (internal, DMZ, management, guest). 2. Implement firewall policies between each zone pair. 3. Consider microsegmentation for high-value systems. 4. Progressively add zones as part of a phased network redesign.",
       "remediation_component": "Network",
-      "remediation_category": "Network Architecture",
+      "remediation_category": "Network Security",
       "remediation_effort": "long_term",
       "validation_tools": [
         "bastion"
@@ -1533,7 +1533,7 @@
       "kev": false,
       "remediation_brief": "1. Implement east-west segmentation between server and workstation VLANs. 2. Deny all server-initiated connections to workstation networks. 3. Permit only required application ports from workstations to servers. 4. Implement network monitoring to detect anomalous east-west traffic.",
       "remediation_component": "Network",
-      "remediation_category": "Network Architecture",
+      "remediation_category": "Network Security",
       "remediation_effort": "long_term",
       "validation_tools": [
         "bastion"
@@ -1576,7 +1576,7 @@
       "kev": false,
       "remediation_brief": "1. Verify that NAT is configured for all rules permitting external traffic to internal RFC-1918 destinations. 2. Ensure that external routing does not leak RFC-1918 prefixes. 3. Implement NAT for all internal-to-external traffic flows.",
       "remediation_component": "Network",
-      "remediation_category": "Network Architecture",
+      "remediation_category": "Network Security",
       "remediation_effort": "short_term",
       "validation_tools": [
         "bastion"
@@ -1617,7 +1617,7 @@
       "kev": false,
       "remediation_brief": "1. Replace 1:1 static NAT with port-specific NAT where possible. 2. Implement access control lists in combination with static NAT. 3. Only expose specific required ports, not the full host. 4. Move services requiring internet exposure to a DMZ with strict policies.",
       "remediation_component": "Network",
-      "remediation_category": "Network Architecture",
+      "remediation_category": "Network Security",
       "remediation_effort": "short_term",
       "validation_tools": [
         "bastion"
@@ -2102,7 +2102,7 @@
     },
     {
       "id": "BA-049",
-      "title": "Firewall: Cato: No Identity-Based Policy \u2014 All Rules Use IP/Network Only",
+      "title": "Firewall: Cato: No Identity-Based Policy — All Rules Use IP/Network Only",
       "aliases": [],
       "source_tools": [
         "bastion"
@@ -2533,7 +2533,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "1. Immediately add a deny rule for the malicious IP above this permit rule. 2. Investigate firewall logs for any traffic to/from the IP. 3. If traffic occurred, treat as a potential incident \u2014 isolate affected hosts and begin forensic analysis. 4. Review the rule to determine if it can be narrowed.",
+      "remediation_brief": "1. Immediately add a deny rule for the malicious IP above this permit rule. 2. Investigate firewall logs for any traffic to/from the IP. 3. If traffic occurred, treat as a potential incident — isolate affected hosts and begin forensic analysis. 4. Review the rule to determine if it can be narrowed.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "immediate",
@@ -2623,7 +2623,7 @@
       "searchsploit_terms": [],
       "metasploit_modules": [],
       "kev": false,
-      "remediation_brief": "No action required \u2014 the deny rule is correctly blocking the malicious IP. Ensure this rule remains in place and is not overridden by a broader permit rule above it in the policy.",
+      "remediation_brief": "No action required — the deny rule is correctly blocking the malicious IP. Ensure this rule remains in place and is not overridden by a broader permit rule above it in the policy.",
       "remediation_component": "Network",
       "remediation_category": "Access Control",
       "remediation_effort": "",
