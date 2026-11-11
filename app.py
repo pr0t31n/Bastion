@@ -147,16 +147,17 @@ _LIVE_FINDINGS: list[dict] = []
 _FINDINGS_DIR: Path | None = None
 
 _fdb = None
-_db_path = os.environ.get("PR0T31N_FINDINGS_DB")
-if _db_path:
-    try:
-        import sys as _s
-        if "/opt/pr0t31n/shared" not in _s.path:
-            _s.path.insert(0, "/opt/pr0t31n/shared")
-        import pr0t31n_findings_db
-        _fdb = pr0t31n_findings_db.FindingsDB(_db_path)
-    except Exception:
-        _fdb = None
+_db_path = os.environ.get("PR0T31N_FINDINGS_DB") or os.path.join(os.getcwd(), "findings.db")
+try:
+    import sys as _s
+    if "/opt/pr0t31n/shared" not in _s.path:
+        _s.path.insert(0, "/opt/pr0t31n/shared")
+    import pr0t31n_findings_db
+    _fdb = pr0t31n_findings_db.FindingsDB(_db_path)
+except Exception:
+    _fdb = None
+if _fdb and _ie:
+    _ie.init_db(_fdb)
 
 
 def _finding_token(finding: dict) -> None:
@@ -265,7 +266,7 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
     parse_result = parser.parse(text)
     rule_count = len(parse_result.rules) if hasattr(parse_result, "rules") else 0
     _log(f"[audit] Parsed {config_path.name} — {rule_count} firewall rules extracted")
-    if _ie and _MANAGED and hasattr(parse_result, "rules"):
+    if _ie and hasattr(parse_result, "rules"):
         try:
             _fw_rows = []
             for _r in parse_result.rules:
@@ -288,7 +289,7 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
                 _ie.emit_intel("firewall_rule", _fw_rows, bulk=True)
         except Exception:
             pass
-    if _ie and _MANAGED and hasattr(parse_result, "metadata"):
+    if _ie and hasattr(parse_result, "metadata"):
         try:
             _zones = (parse_result.metadata or {}).get("zones", [])
             if isinstance(_zones, list) and _zones:
@@ -643,9 +644,7 @@ def build_rule_geo_summary(configs: list[Path], output_dir: Path,
         _log(f"[geo]   • {c['country_name']} ({c['country_code']}): "
              f"{c['unique_ips']} IPs, {c['permit_rules']} permit / {c['deny_rules']} deny rules")
 
-    (Path(output_dir) / "geo_summary.json").write_text(
-        json.dumps(geo_summary, indent=2, default=str), encoding="utf-8")
-    if _ie and _MANAGED:
+    if _ie:
         try:
             _geo_countries = geo_summary.get("countries", [])
             if _geo_countries:
@@ -664,6 +663,8 @@ def build_rule_geo_summary(configs: list[Path], output_dir: Path,
                 ], bulk=True)
         except Exception:
             pass
+    (Path(output_dir) / "geo_summary.json").write_text(
+        json.dumps(geo_summary, indent=2, default=str), encoding="utf-8")
 
 
 def main() -> int:
