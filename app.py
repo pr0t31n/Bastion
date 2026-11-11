@@ -104,6 +104,14 @@ from engine.audit_engine import AuditEngine
 _MANAGED = os.environ.get("CRUCIBLE_MANAGED") == "1" or \
            os.environ.get("BASTION_MANAGED") == "1"
 
+try:
+    import sys as _sys_ie
+    if "/opt/pr0t31n/shared" not in _sys_ie.path:
+        _sys_ie.path.insert(0, "/opt/pr0t31n/shared")
+    import pr0t31n_intel_emitter as _ie
+except ImportError:
+    _ie = None
+
 
 def _ts() -> str:
     return datetime.now().strftime("%H:%M:%S")
@@ -257,6 +265,46 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
     parse_result = parser.parse(text)
     rule_count = len(parse_result.rules) if hasattr(parse_result, "rules") else 0
     _log(f"[audit] Parsed {config_path.name} — {rule_count} firewall rules extracted")
+    if _ie and _MANAGED and hasattr(parse_result, "rules"):
+        try:
+            _fw_rows = []
+            for _r in parse_result.rules:
+                _src = ", ".join(getattr(_r, "src_addresses", []) or [])
+                _dst = ", ".join(getattr(_r, "dst_addresses", []) or [])
+                _fw_rows.append({
+                    "action":      getattr(_r, "action", ""),
+                    "rule_number": getattr(_r, "rule_id", None),
+                    "policy":      getattr(_r, "rule_name", None),
+                    "source_zone": getattr(_r, "src_zone", None),
+                    "dest_zone":   getattr(_r, "dst_zone", None),
+                    "source_addr": _src,
+                    "dest_addr":   _dst,
+                    "protocol":    getattr(_r, "protocol", None),
+                    "hits":        getattr(_r, "hit_count", 0) or 0,
+                    "enabled":     getattr(_r, "enabled", True),
+                    "comment":     getattr(_r, "comments", None),
+                })
+            if _fw_rows:
+                _ie.emit_intel("firewall_rule", _fw_rows, bulk=True)
+        except Exception:
+            pass
+    if _ie and _MANAGED and hasattr(parse_result, "metadata"):
+        try:
+            _zones = (parse_result.metadata or {}).get("zones", [])
+            if isinstance(_zones, list) and _zones:
+                _zr = []
+                for _z in _zones:
+                    if isinstance(_z, dict):
+                        _zr.append({
+                            "name":        _z.get("name", ""),
+                            "zone_type":   _z.get("type", None),
+                            "interfaces":  _z.get("interfaces", []),
+                            "description": _z.get("description", None),
+                        })
+                if _zr:
+                    _ie.emit_intel("firewall_zone", _zr, bulk=True)
+        except Exception:
+            pass
 
     engine = AuditEngine()
     _log(f"[audit] Running audit engine against {rule_count} rules from {config_path.name}...")
@@ -597,6 +645,25 @@ def build_rule_geo_summary(configs: list[Path], output_dir: Path,
 
     (Path(output_dir) / "geo_summary.json").write_text(
         json.dumps(geo_summary, indent=2, default=str), encoding="utf-8")
+    if _ie and _MANAGED:
+        try:
+            _geo_countries = geo_summary.get("countries", [])
+            if _geo_countries:
+                _ie.emit_intel("firewall_compliance", [
+                    {
+                        "check_id":    f"GEO-{c.get('country_code', 'XX')}",
+                        "check_name":  f"Rule IPs in {c.get('country_name', '?')}",
+                        "status":      "info",
+                        "category":    "geographic_distribution",
+                        "severity":    "INFO",
+                        "details":     f"{c.get('unique_ips', 0)} IPs, "
+                                       f"{c.get('permit_rules', 0)} permit / "
+                                       f"{c.get('deny_rules', 0)} deny",
+                        "framework":   "geo_analysis",
+                    } for c in _geo_countries
+                ], bulk=True)
+        except Exception:
+            pass
 
 
 def main() -> int:
