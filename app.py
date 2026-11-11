@@ -306,6 +306,21 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
                     _ie.emit_intel("firewall_zone", _zr, bulk=True)
         except Exception:
             pass
+    if _ie:
+        try:
+            _cfg_meta = {}
+            if hasattr(parse_result, "metadata") and parse_result.metadata:
+                _cfg_meta = {k: v for k, v in parse_result.metadata.items()
+                             if k != "zones"}
+            _ie.emit_intel("firewall_config", {
+                "vendor": vendor,
+                "config_file": config_path.name,
+                "rule_count": rule_count,
+                "line_count": line_count,
+                "metadata": _cfg_meta,
+            })
+        except Exception:
+            pass
 
     engine = AuditEngine()
     _log(f"[audit] Running audit engine against {rule_count} rules from {config_path.name}...")
@@ -770,6 +785,36 @@ def main() -> int:
     if _RUNLOG:
         _RUNLOG.event(f"Audit phase complete — {len(all_findings)} findings")
     ended_at = _now_iso()
+
+    if _ie and all_findings:
+        try:
+            _posture_risk = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
+            for _f in all_findings:
+                _r = _canon_risk(_f.get("risk"))
+                if _r in _posture_risk:
+                    _posture_risk[_r] += 1
+            _ie.emit_intel("network_posture", {
+                "total_findings": len(all_findings),
+                "risk_counts": _posture_risk,
+                "configs_audited": len(configs),
+                "vendor": ns.vendor or "auto-detected",
+            })
+        except Exception:
+            pass
+    if _ie:
+        try:
+            _hardening = [
+                {"title": _f.get("title", ""),
+                 "risk": _canon_risk(_f.get("risk")),
+                 "audit_rule_id": _f.get("audit_rule_id", ""),
+                 "config_file": _f.get("config_file", "")}
+                for _f in all_findings
+                if _canon_risk(_f.get("risk")) in ("CRITICAL", "HIGH", "MEDIUM")
+            ]
+            if _hardening:
+                _ie.emit_intel("endpoint_hardening", _hardening, bulk=True)
+        except Exception:
+            pass
 
     # ── Threat-intel phase ────────────────────────────────────────────
     if _HAVE_THREAT_INTEL and not ns.skip_threat_intel:
