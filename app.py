@@ -296,10 +296,11 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
                 _zr = []
                 for _z in _zones:
                     if isinstance(_z, dict):
+                        _ifaces = _z.get("interfaces", [])
                         _zr.append({
                             "name":        _z.get("name", ""),
                             "zone_type":   _z.get("type", None),
-                            "interfaces":  _z.get("interfaces", []),
+                            "interfaces":  ", ".join(_ifaces) if isinstance(_ifaces, list) else str(_ifaces or ""),
                             "description": _z.get("description", None),
                         })
                 if _zr:
@@ -317,7 +318,7 @@ def audit_one_config(config_path: Path, *, vendor: str | None,
                 "config_file": config_path.name,
                 "rule_count": rule_count,
                 "line_count": line_count,
-                "metadata": _cfg_meta,
+                "metadata": json.dumps(_cfg_meta, default=str) if isinstance(_cfg_meta, dict) else str(_cfg_meta or ""),
             })
         except Exception:
             pass
@@ -793,12 +794,35 @@ def main() -> int:
                 _r = _canon_risk(_f.get("risk"))
                 if _r in _posture_risk:
                     _posture_risk[_r] += 1
-            _ie.emit_intel("network_posture", {
-                "total_findings": len(all_findings),
-                "risk_counts": _posture_risk,
-                "configs_audited": len(configs),
-                "vendor": ns.vendor or "auto-detected",
+            _vendor = ns.vendor or "auto-detected"
+            _posture_rows = []
+            _posture_rows.append({
+                "category": "summary",
+                "check_name": "total_findings",
+                "status": "info",
+                "value": str(len(all_findings)),
+                "risk": "INFO",
+                "description": f"{len(all_findings)} findings across {len(configs)} configs ({_vendor})",
             })
+            _posture_rows.append({
+                "category": "summary",
+                "check_name": "configs_audited",
+                "status": "info",
+                "value": str(len(configs)),
+                "risk": "INFO",
+                "description": f"{len(configs)} configuration files audited for {_vendor}",
+            })
+            for _rk, _rv in _posture_risk.items():
+                if _rv > 0:
+                    _posture_rows.append({
+                        "category": "risk_distribution",
+                        "check_name": f"{_rk.lower()}_count",
+                        "status": "fail" if _rk in ("CRITICAL", "HIGH") else "warn" if _rk == "MEDIUM" else "pass",
+                        "value": str(_rv),
+                        "risk": _rk,
+                        "description": f"{_rv} {_rk} severity findings",
+                    })
+            _ie.emit_intel("network_posture", _posture_rows, bulk=True)
         except Exception:
             pass
     if _ie:
