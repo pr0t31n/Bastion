@@ -778,6 +778,38 @@ def main() -> int:
         try:
             fl = audit_one_config(cfg, vendor=ns.vendor, output_dir=out_dir)
             all_findings.extend(fl)
+            if _ie and fl:
+                try:
+                    _per_cfg_hardening = [
+                        {"title": _f.get("title", ""),
+                         "risk": _canon_risk(_f.get("risk")),
+                         "audit_rule_id": _f.get("audit_rule_id", ""),
+                         "config_file": _f.get("config_file", "")}
+                        for _f in fl
+                        if _canon_risk(_f.get("risk")) in ("CRITICAL", "HIGH", "MEDIUM")
+                    ]
+                    if _per_cfg_hardening:
+                        _ie.emit_intel("endpoint_hardening", _per_cfg_hardening, bulk=True)
+                    _per_cfg_risk = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0, "INFO": 0}
+                    for _f in fl:
+                        _r = _canon_risk(_f.get("risk"))
+                        if _r in _per_cfg_risk:
+                            _per_cfg_risk[_r] += 1
+                    _per_cfg_posture = []
+                    for _rk, _rv in _per_cfg_risk.items():
+                        if _rv > 0:
+                            _per_cfg_posture.append({
+                                "category": "risk_distribution",
+                                "check_name": f"{_rk.lower()}_count",
+                                "status": "fail" if _rk in ("CRITICAL", "HIGH") else "warn" if _rk == "MEDIUM" else "pass",
+                                "value": str(_rv),
+                                "risk": _rk,
+                                "description": f"{_rv} {_rk} severity findings from {cfg.name}",
+                            })
+                    if _per_cfg_posture:
+                        _ie.emit_intel("network_posture", _per_cfg_posture, bulk=True)
+                except Exception:
+                    pass
         except Exception as exc:
             _err(f"[audit] FAILED on {cfg.name}: {exc}")
             logging.error("audit failed on %s: %s", cfg.name, exc, exc_info=True)
